@@ -1,0 +1,15 @@
+.idea
+env
+wheelhouse
+*.iml
+*.egg-info
+*.pyc
+*.pyo
+doc/build
+.#*
+dist
+.coverage
+pylint.out
+coverage.xml
+nosetests.xml
+local-settings.py
