@@ -27,5 +27,8 @@ class WarthogError(Exception):
 
 
 class WarthogAuthFailureError(WarthogError):
-    """
-    """
+    pass
+
+
+class WarthotNodeStatusError(WarthogError):
+    pass
