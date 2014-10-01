@@ -83,20 +83,23 @@ class AuthenticatedRequest(object):
         self._scheme_host = scheme_host
         self._session_id = session_id
 
-    def send(self):
-        pass
+    def send(self, server):
+        raise NotImplementedError()
 
 
 class NodeEnableRequest(AuthenticatedRequest):
-    pass
+    def send(self, server):
+        pass
 
 
 class NodeDisableRequest(AuthenticatedRequest):
-    pass
+    def send(self, server):
+        pass
 
 
 class NodeStatusRequest(AuthenticatedRequest):
-    pass
+    def send(self, server):
+        pass
 
 
 def get_base_url(scheme_host):
