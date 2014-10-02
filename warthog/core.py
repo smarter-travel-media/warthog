@@ -3,6 +3,7 @@
 """
 """
 import logging
+import urlparse
 
 import requests
 import warthog.exc
@@ -12,17 +13,19 @@ STATUS_ENABLED = 'enabled'
 
 STATUS_DISABLED = 'disabled'
 
-STATUS_TRANSITION = 'transition'
-
 _API_VERSION = 'v2'
 
 _ACTION_AUTHENTICATE = 'authenticate'
 
-_ACTION_ENABLE = ''
-
-_ACTION_DISABLE = ''
+_ACTION_ENABLE = _ACTION_DISABLE = 'slb.server.update'
 
 _ACTION_STATUS = 'slb.server.search'
+
+_ACTION_STATISTICS = 'slb.server.fetchStatistics'
+
+
+def get_log():
+    return logging.getLogger('warthog')
 
 
 class RequestsRunner(object):
@@ -36,67 +39,146 @@ class RequestsRunner(object):
 
 
 class SessionStartCommand(object):
-    logger = logging.getLogger('warthog')
+    """
+
+    """
+    _logger = get_log()
 
     def __init__(self, scheme_host, username, password, runner=None):
+        """
+        """
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
         self._runner = runner if runner is not None else RequestsRunner()
 
-
     def send(self):
+        """
+        """
         url = get_base_url(self._scheme_host)
         params = get_base_query_params(_ACTION_AUTHENTICATE)
         params['username'] = self._username
         params['password'] = self._password
 
-        self.logger.debug('Making session start request to %s', url)
+        self._logger.debug('Making session start request to %s', url)
         r = self._runner.get(url, params=params)
 
         json = r.json()
         if 'session_id' not in json:
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogAuthFailureError('Authentication failure', msg, code)
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogAuthFailureError(
+                'Authentication failure with {0}'.format(self._scheme_host), msg, code)
         return json['session_id']
 
 
 class AuthenticatedCommand(object):
-    logger = logging.getLogger('warthog')
+    """
+
+    """
+    _logger = get_log()
 
     def __init__(self, scheme_host, session_id):
+        """
+        """
         self._scheme_host = scheme_host
         self._session_id = session_id
 
     def send(self, server):
+        """
+        """
         raise NotImplementedError()
 
 
 class NodeEnableCommand(AuthenticatedCommand):
+    """
+
+    """
+
+    def __init__(self, scheme_host, session_id, runner=None):
+        """
+
+
+        """
+        super(NodeEnableCommand, self).__init__(scheme_host, session_id)
+        self._runner = runner if runner is not None else RequestsRunner()
+
     def send(self, server):
-        pass
+        """
+        """
+        url = get_base_url(self._scheme_host)
+        params = get_base_query_params(_ACTION_ENABLE, self._session_id)
+        params['name'] = server
+        params['server'] = server
+        params['status'] = 1
+
+        self._logger.debug('Making node enable request for %s', server)
+        r = self._runner.post(url, params=params)
+        json = r.json()
+
+        if json['response']['status'] == 'fail':
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogNodeEnableError(
+                'Could not enable node {0}'.format(server), msg, code)
+        return True
 
 
 class NodeDisableCommand(AuthenticatedCommand):
+    """
+
+    """
+
+    def __init__(self, scheme_host, session_id, runner=None):
+        """
+        """
+        super(NodeDisableCommand, self).__init__(scheme_host, session_id)
+        self._runner = runner if runner is not None else RequestsRunner()
+
     def send(self, server):
-        pass
+        """
+        """
+        url = get_base_url(self._scheme_host)
+        params = get_base_query_params(_ACTION_ENABLE, self._session_id)
+        params['name'] = server
+        params['server'] = server
+        params['status'] = 0
+
+        self._logger.debug('Making node disable request for %s', server)
+        r = self._runner.post(url, params=params)
+        json = r.json()
+
+        if json['response']['status'] == 'fail':
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogNodeDisableError(
+                'Could not disable node {0}'.format(server), msg, code)
+        return True
 
 
 class NodeStatusCommand(AuthenticatedCommand):
+    """
+
+    """
+
     def __init__(self, scheme_host, session_id, runner=None):
+        """
+
+        """
         super(NodeStatusCommand, self).__init__(scheme_host, session_id)
         self._runner = runner if runner is not None else RequestsRunner()
 
     def send(self, server):
+        """
+        """
         url = get_base_url(self._scheme_host)
         params = get_base_query_params(_ACTION_STATUS, self._session_id)
         params['name'] = server
+
+        self._logger.debug('Making node status request for %s', server)
         r = self._runner.get(url, params=params)
 
         json = r.json()
         if 'server' not in json:
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthotNodeStatusError(
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogNodeStatusError(
                 'Could not get status of {0}'.format(server), msg, code)
 
         status = json['server']['status']
@@ -105,19 +187,60 @@ class NodeStatusCommand(AuthenticatedCommand):
         return STATUS_DISABLED
 
 
-def _extract_error_message(response):
+class NodeActiveConnectionsCommand(AuthenticatedCommand):
+    """
+
+
+
+
+    """
+
+    def __init__(self, scheme_host, session_id, runner=None):
+        """
+        """
+        super(NodeActiveConnectionsCommand, self).__init__(scheme_host, session_id)
+        self._runner = runner if runner is not None else RequestsRunner()
+
+    def send(self, server):
+        """
+        """
+        url = get_base_url(self._scheme_host)
+        params = get_base_query_params(_ACTION_STATISTICS, self._session_id)
+        params['name'] = server
+
+        self._logger.debug('Making active connection count request for %s', server)
+        r = self._runner.get(url, params=params)
+
+        json = r.json()
+        if 'server_stat' not in json:
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogNodeStatusError(
+                'Could not get active connection count of {0}'.format(server), msg, code)
+
+        return json['server_stat']['cur_conns']
+
+
+def extract_error_message(response):
     """
 
     :param response:
     :return:
     """
-    if 'fail' == response['status']:
+    if response['status'] == 'fail':
         return response['err']['msg'].strip(), response['err']['code']
-    raise ValueError("Unexpected response format from request: {0}".format(response))
+    raise ValueError(
+        "Unexpected response format from request: {0}".format(response))
 
 
 def get_base_url(scheme_host):
-    return '/'.join([scheme_host, 'services', 'rest', _API_VERSION]) + '/'
+    """
+
+
+    :param scheme_host:
+    :return:
+    """
+    return urlparse.urljoin(
+        scheme_host, 'services/rest/{version}/'.format(version=_API_VERSION))
 
 
 def get_base_query_params(action, session_id=None):

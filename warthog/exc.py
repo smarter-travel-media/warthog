@@ -30,5 +30,13 @@ class WarthogAuthFailureError(WarthogError):
     pass
 
 
-class WarthotNodeStatusError(WarthogError):
+class WarthogNodeStatusError(WarthogError):
+    pass
+
+
+class WarthogNodeEnableError(WarthogError):
+    pass
+
+
+class WarthogNodeDisableError(WarthogError):
     pass
