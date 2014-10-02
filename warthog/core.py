@@ -26,9 +26,7 @@ _ACTION_AUTHENTICATE = 'authenticate'
 
 _ACTION_ENABLE = _ACTION_DISABLE = 'slb.server.update'
 
-_ACTION_STATUS = 'slb.server.search'
-
-_ACTION_STATISTICS = 'slb.server.fetchStatistics'
+_ACTION_STATUS = _ACTION_STATISTICS = 'slb.server.fetchStatistics'
 
 _ACTION_CLOSE_SESSION = 'session.close'
 
@@ -248,15 +246,18 @@ class NodeStatusCommand(_AuthenticatedCommand):
         self._logger.debug(r.text)
         json = r.json()
 
-        if 'server' not in json:
+        if 'server_stat' not in json:
             msg, code = _extract_error_message(json['response'])
             raise warthog.exc.WarthogNodeStatusError(
                 'Could not get status of {0}'.format(server), msg, code)
 
-        status = json['server']['status']
-        if status:
+        status = json['server_stat']['status']
+        if status == 0:
+            return STATUS_DISABLED
+        if status == 1:
             return STATUS_ENABLED
-        return STATUS_DISABLED
+        raise warthog.exc.WarthogNodeStatusError(
+            'Unknown status of {0}: status={1}'.format(server, status))
 
 
 class NodeActiveConnectionsCommand(_AuthenticatedCommand):
