@@ -7,6 +7,7 @@ from __future__ import print_function, division
 import time
 
 import warthog.core
+import warthog.exc
 
 
 class CommandFactory(object):
@@ -29,7 +30,7 @@ class CommandFactory(object):
         return warthog.core.NodeActiveConnectionsCommand(scheme_host, session_id)
 
 
-class SessionManager(object):
+class _SessionManager(object):
     def __init__(self, scheme_host, username, password, commands):
         self._scheme_host = scheme_host
         self._username = username
@@ -51,15 +52,32 @@ class SessionManager(object):
         return False
 
 
+def try_repeatedly(method, interval, max_retries):
+    retries = 0
+
+    while True:
+        try:
+            return method()
+        except warthog.exc.WarthogError as e:
+            if e.api_code not in warthog.core.TRANSIENT_ERRORS or retries >= max_retries:
+                raise
+            time.sleep(interval)
+            retries += 1
+
+
 class WarthogClient(object):
-    def __init__(self, scheme_host, username, password, commands=None):
+    _logger = warthog.core.get_log()
+    _default_wait_interval = 2
+
+    def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
+        self._interval = wait_interval
         self._commands = commands if commands is not None else CommandFactory()
 
     def context(self):
-        return SessionManager(
+        return _SessionManager(
             self._scheme_host, self._username, self._password, self._commands)
 
     def get_status(self, server):
@@ -67,33 +85,34 @@ class WarthogClient(object):
             cmd = self._commands.get_server_status(self._scheme_host, session)
             return cmd.send(server)
 
-    def disable_server(self, server, wait_for_connections=True, max_wait_secs=10):
+    def disable_server(self, server, wait_for_connections=True, max_retries=5):
         with self.context() as session:
             disable = self._commands.get_disable_server(self._scheme_host, session)
             disable.send(server)
 
             if wait_for_connections:
-                self._wait_for_active_connections(session, server, max_wait_secs)
+                active = self._commands.get_active_connections(self._scheme_host, session)
+                self._wait_for_connections(active, server, max_retries)
 
             status = self._commands.get_server_status(self._scheme_host, session)
             return warthog.core.STATUS_DISABLED == status.send(server)
 
-    def _wait_for_active_connections(self, session, server, max_wait_secs):
-        interval = 2
-        elapsed = 0
-        while elapsed < max_wait_secs:
-            active = self._commands.get_active_connections(self._scheme_host, session)
-            conns = active.send(server)
+    def _wait_for_connections(self, cmd, server, max_retries):
+        retries = 0
 
-            if conns == 0:
+        while retries < max_retries:
+            if cmd.send(server) == 0:
                 break
 
-            time.sleep(interval)
-            elapsed += interval
+            time.sleep(self._interval)
+            retries += 1
 
-    def enable_server(self, server):
+    def enable_server(self, server, max_retries=5):
         with self.context() as session:
             cmd = self._commands.get_enable_server(self._scheme_host, session)
-            return cmd.send(server)
+            method = lambda: cmd.send(server)
+
+            # This function will only run the method once if max_retries is zero
+            return try_repeatedly(method, self._interval, max_retries)
 
 
