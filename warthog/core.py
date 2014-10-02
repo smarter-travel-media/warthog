@@ -4,6 +4,7 @@
 """
 import logging
 import urlparse
+import time
 
 import requests
 import warthog.exc
@@ -30,19 +31,37 @@ def get_log():
     return logging.getLogger('warthog')
 
 
-class RequestsRunner(object):
-    def __init__(self, timeout=None):
+class RequestsHttpTransport(object):
+    _logger = get_log()
+
+    def __init__(self, timeout=None, retries=0, retry_delay=0):
         self._timeout = timeout
+        self._retires = retries
+        self._retry_delay = retry_delay
+
+    def _run_with_retries(self, method, *args, **kwargs):
+        retries = 0
+
+        while True:
+            try:
+                return method(*args, **kwargs)
+            except requests.RequestException as e:
+                self._logger.debug("Retrying request %s because of %s", args[0], e)
+                if retries >= self._retires:
+                    raise
+
+                retries += 1
+                time.sleep(self._retry_delay)
 
     def get(self, *args, **kwargs):
         if self._timeout is not None:
             kwargs['timeout'] = self._timeout
-        return requests.get(*args, **kwargs)
+        return self._run_with_retries(requests.get, *args, **kwargs)
 
     def post(self, *args, **kwargs):
         if self._timeout is not None:
             kwargs['timeout'] = self._timeout
-        return requests.post(*args, **kwargs)
+        return self._run_with_retries(requests.post, *args, **kwargs)
 
 
 class SessionStartCommand(object):
@@ -57,7 +76,7 @@ class SessionStartCommand(object):
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self):
         """
@@ -100,7 +119,7 @@ class AuthenticatedCommand(object):
 class SessionEndCommand(AuthenticatedCommand):
     def __init__(self, scheme_host, session_id, runner=None):
         super(SessionEndCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self):
         url = get_base_url(self._scheme_host)
@@ -130,7 +149,7 @@ class NodeEnableCommand(AuthenticatedCommand):
 
         """
         super(NodeEnableCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self, server):
         """
@@ -162,7 +181,7 @@ class NodeDisableCommand(AuthenticatedCommand):
         """
         """
         super(NodeDisableCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self, server):
         """
@@ -195,7 +214,7 @@ class NodeStatusCommand(AuthenticatedCommand):
 
         """
         super(NodeStatusCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self, server):
         """
@@ -232,7 +251,7 @@ class NodeActiveConnectionsCommand(AuthenticatedCommand):
         """
         """
         super(NodeActiveConnectionsCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsRunner()
+        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self, server):
         """
