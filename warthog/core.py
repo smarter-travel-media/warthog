@@ -23,18 +23,25 @@ _ACTION_STATUS = 'slb.server.search'
 
 _ACTION_STATISTICS = 'slb.server.fetchStatistics'
 
+_ACTION_CLOSE_SESSION = 'session.close'
+
 
 def get_log():
     return logging.getLogger('warthog')
 
 
 class RequestsRunner(object):
-    @staticmethod
-    def get(*args, **kwargs):
+    def __init__(self, timeout=None):
+        self._timeout = timeout
+
+    def get(self, *args, **kwargs):
+        if self._timeout is not None:
+            kwargs['timeout'] = self._timeout
         return requests.get(*args, **kwargs)
 
-    @staticmethod
-    def post(*args, **kwargs):
+    def post(self, *args, **kwargs):
+        if self._timeout is not None:
+            kwargs['timeout'] = self._timeout
         return requests.post(*args, **kwargs)
 
 
@@ -62,8 +69,9 @@ class SessionStartCommand(object):
 
         self._logger.debug('Making session start request to %s', url)
         r = self._runner.get(url, params=params)
-
+        self._logger.debug(r.text)
         json = r.json()
+
         if 'session_id' not in json:
             msg, code = extract_error_message(json['response'])
             raise warthog.exc.WarthogAuthFailureError(
@@ -83,10 +91,32 @@ class AuthenticatedCommand(object):
         self._scheme_host = scheme_host
         self._session_id = session_id
 
-    def send(self, server):
+    def send(self, *args):
         """
         """
         raise NotImplementedError()
+
+
+class SessionEndCommand(AuthenticatedCommand):
+    def __init__(self, scheme_host, session_id, runner=None):
+        super(SessionEndCommand, self).__init__(scheme_host, session_id)
+        self._runner = runner if runner is not None else RequestsRunner()
+
+    def send(self):
+        url = get_base_url(self._scheme_host)
+        params = get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
+
+        self._logger.debug('Making session close request to %s', url)
+        r = self._runner.post(url, params=params)
+        self._logger.debug(r.text)
+        json = r.json()
+
+        if json['response']['status'] == 'fail':
+            msg, code = extract_error_message(json['response'])
+            raise warthog.exc.WarthogAuthCloseError(
+                'Could not close session {0} on {1}'.format(
+                    self._session_id, self._scheme_host), msg, code)
+        return True
 
 
 class NodeEnableCommand(AuthenticatedCommand):
@@ -113,6 +143,7 @@ class NodeEnableCommand(AuthenticatedCommand):
 
         self._logger.debug('Making node enable request for %s', server)
         r = self._runner.post(url, params=params)
+        self._logger.debug(r.text)
         json = r.json()
 
         if json['response']['status'] == 'fail':
@@ -144,6 +175,7 @@ class NodeDisableCommand(AuthenticatedCommand):
 
         self._logger.debug('Making node disable request for %s', server)
         r = self._runner.post(url, params=params)
+        self._logger.debug(r.text)
         json = r.json()
 
         if json['response']['status'] == 'fail':
@@ -174,8 +206,9 @@ class NodeStatusCommand(AuthenticatedCommand):
 
         self._logger.debug('Making node status request for %s', server)
         r = self._runner.get(url, params=params)
-
+        self._logger.debug(r.text)
         json = r.json()
+
         if 'server' not in json:
             msg, code = extract_error_message(json['response'])
             raise warthog.exc.WarthogNodeStatusError(
@@ -210,13 +243,13 @@ class NodeActiveConnectionsCommand(AuthenticatedCommand):
 
         self._logger.debug('Making active connection count request for %s', server)
         r = self._runner.get(url, params=params)
-
+        self._logger.debug(r.text)
         json = r.json()
+
         if 'server_stat' not in json:
             msg, code = extract_error_message(json['response'])
             raise warthog.exc.WarthogNodeStatusError(
                 'Could not get active connection count of {0}'.format(server), msg, code)
-
         return json['server_stat']['cur_conns']
 
 

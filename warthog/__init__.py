@@ -12,6 +12,9 @@ from .core import (
     NodeDisableCommand,
     NodeEnableCommand,
     NodeStatusCommand,
+    SessionEndCommand,
     SessionStartCommand,
     STATUS_ENABLED,
     STATUS_DISABLED)
+
+from .client import WarthogClient

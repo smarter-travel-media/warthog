@@ -40,3 +40,7 @@ class WarthogNodeEnableError(WarthogError):
 
 class WarthogNodeDisableError(WarthogError):
     pass
+
+
+class WarthogAuthCloseError(WarthogError):
+    pass
