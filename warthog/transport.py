@@ -39,7 +39,6 @@ class SSLTLSV1Adapter(HTTPAdapter):
     """
 
     def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(num_pools=connections,
-                                       maxsize=maxsize,
-                                       block=block,
-                                       ssl_version=ssl.PROTOCOL_TLSv1)
+        self.poolmanager = PoolManager(
+            num_pools=connections, maxsize=maxsize, block=block,
+            ssl_version=ssl.PROTOCOL_TLSv1)
