@@ -7,7 +7,7 @@ from __future__ import print_function, division
 import time
 
 import warthog.core
-import warthog.exc
+import warthog.exceptions
 import warthog.transport
 
 
@@ -41,12 +41,7 @@ class WarthogCommandFactory(object):
 
 
 def get_default_cmd_factory():
-    transport = warthog.transport.TransportBuilder() \
-        .disable_verify() \
-        .use_tlsv1() \
-        .get()
-
-    return WarthogCommandFactory(transport)
+    return WarthogCommandFactory(warthog.transport.get_transport())
 
 
 class _SessionManager(object):
@@ -77,7 +72,7 @@ def try_repeatedly(method, interval, max_retries):
     while True:
         try:
             return method()
-        except warthog.exc.WarthogError as e:
+        except warthog.exceptions.WarthogError as e:
             if e.api_code not in warthog.core.TRANSIENT_ERRORS or retries >= max_retries:
                 raise
             time.sleep(interval)

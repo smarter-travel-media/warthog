@@ -5,7 +5,7 @@
 import logging
 import urlparse
 
-import warthog.exc
+import warthog.exceptions
 
 
 STATUS_ENABLED = 'enabled'
@@ -62,7 +62,7 @@ class SessionStartCommand(object):
 
         if 'session_id' not in json:
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogAuthFailureError(
+            raise warthog.exceptions.WarthogAuthFailureError(
                 'Authentication failure with {0}'.format(self._scheme_host), msg, code)
         return json['session_id']
 
@@ -108,7 +108,7 @@ class SessionEndCommand(_AuthenticatedCommand):
 
         if json['response']['status'] == 'fail':
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogAuthCloseError(
+            raise warthog.exceptions.WarthogAuthCloseError(
                 'Could not close session {0} on {1}'.format(
                     self._session_id, self._scheme_host), msg, code)
         return True
@@ -135,7 +135,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
 
         if json['response']['status'] == 'fail':
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogNodeEnableError(
+            raise warthog.exceptions.WarthogNodeEnableError(
                 'Could not enable node {0}'.format(server), msg, code)
         return True
 
@@ -161,7 +161,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
 
         if json['response']['status'] == 'fail':
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogNodeDisableError(
+            raise warthog.exceptions.WarthogNodeDisableError(
                 'Could not disable node {0}'.format(server), msg, code)
         return True
 
@@ -185,7 +185,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
 
         if 'server_stat' not in json:
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogNodeStatusError(
+            raise warthog.exceptions.WarthogNodeStatusError(
                 'Could not get status of {0}'.format(server), msg, code)
 
         status = json['server_stat']['status']
@@ -193,7 +193,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
             return STATUS_DISABLED
         if status == 1:
             return STATUS_ENABLED
-        raise warthog.exc.WarthogNodeStatusError(
+        raise warthog.exceptions.WarthogNodeStatusError(
             'Unknown status of {0}: status={1}'.format(server, status))
 
 

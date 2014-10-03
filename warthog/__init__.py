@@ -17,4 +17,4 @@ from .core import (
     STATUS_ENABLED,
     STATUS_DISABLED)
 
-from .client import WarthogClient
+from .client import WarthogClient, WarthogCommandFactory

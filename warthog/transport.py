@@ -16,21 +16,17 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
-class TransportBuilder(object):
-    def __init__(self, base=None):
-        self._base = base if base is not None else requests.Session()
+def get_transport(disable_verify=False, use_tlsv1=True):
+    transport = requests.Session()
 
-    def disable_verify(self):
+    if disable_verify:
         warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-        self._base.verify = False
-        return self
+        transport.verify = False
 
-    def use_tlsv1(self):
-        self._base.mount('https://', SSLTLSV1Adapter())
-        return self
+    if use_tlsv1:
+        transport.mount('https://', SSLTLSV1Adapter())
 
-    def get(self):
-        return self._base
+    return transport
 
 
 class SSLTLSV1Adapter(HTTPAdapter):
@@ -38,7 +34,7 @@ class SSLTLSV1Adapter(HTTPAdapter):
     for interacting with the A10 load balancer.
     """
 
-    def init_poolmanager(self, connections, maxsize, block=False):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         self.poolmanager = PoolManager(
             num_pools=connections, maxsize=maxsize, block=block,
-            ssl_version=ssl.PROTOCOL_TLSv1)
+            ssl_version=ssl.PROTOCOL_TLSv1, **pool_kwargs)
