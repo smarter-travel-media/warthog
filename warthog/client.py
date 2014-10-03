@@ -8,26 +8,45 @@ import time
 
 import warthog.core
 import warthog.exc
+import warthog.transport
 
 
-class CommandFactory(object):
+class WarthogCommandFactory(object):
+    def __init__(self, transport):
+        self._transport = transport
+
     def get_session_start(self, scheme_host, username, password):
-        return warthog.core.SessionStartCommand(scheme_host, username, password)
+        return warthog.core.SessionStartCommand(
+            self._transport, scheme_host, username, password)
 
     def get_session_end(self, scheme_host, session_id):
-        return warthog.core.SessionEndCommand(scheme_host, session_id)
+        return warthog.core.SessionEndCommand(
+            self._transport, scheme_host, session_id)
 
     def get_server_status(self, scheme_host, session_id):
-        return warthog.core.NodeStatusCommand(scheme_host, session_id)
+        return warthog.core.NodeStatusCommand \
+            (self._transport, scheme_host, session_id)
 
     def get_enable_server(self, scheme_host, session_id):
-        return warthog.core.NodeEnableCommand(scheme_host, session_id)
+        return warthog.core.NodeEnableCommand(
+            self._transport, scheme_host, session_id)
 
     def get_disable_server(self, scheme_host, session_id):
-        return warthog.core.NodeDisableCommand(scheme_host, session_id)
+        return warthog.core.NodeDisableCommand(
+            self._transport, scheme_host, session_id)
 
     def get_active_connections(self, scheme_host, session_id):
-        return warthog.core.NodeActiveConnectionsCommand(scheme_host, session_id)
+        return warthog.core.NodeActiveConnectionsCommand(
+            self._transport, scheme_host, session_id)
+
+
+def get_default_cmd_factory():
+    transport = warthog.transport.TransportBuilder() \
+        .disable_verify() \
+        .use_tlsv1() \
+        .get()
+
+    return WarthogCommandFactory(transport)
 
 
 class _SessionManager(object):
@@ -74,9 +93,11 @@ class WarthogClient(object):
         self._username = username
         self._password = password
         self._interval = wait_interval
-        self._commands = commands if commands is not None else CommandFactory()
+        self._commands = commands if commands is not None else get_default_cmd_factory()
 
     def context(self):
+        self._logger.debug('Creating new session context for %s', self._scheme_host)
+
         return _SessionManager(
             self._scheme_host, self._username, self._password, self._commands)
 
@@ -101,9 +122,12 @@ class WarthogClient(object):
         retries = 0
 
         while retries < max_retries:
-            if cmd.send(server) == 0:
+            conns = cmd.send(server)
+            if conns == 0:
                 break
 
+            self._logger.debug(
+                "Connections still active: %s, sleeping for %s seconds...", conns, self._interval)
             time.sleep(self._interval)
             retries += 1
 

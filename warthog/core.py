@@ -4,9 +4,7 @@
 """
 import logging
 import urlparse
-import time
 
-import requests
 import warthog.exc
 
 
@@ -35,52 +33,19 @@ def get_log():
     return logging.getLogger('warthog')
 
 
-class RequestsHttpTransport(object):
-    _logger = get_log()
-
-    def __init__(self, timeout=None, retries=0, retry_delay=0):
-        self._timeout = timeout
-        self._retires = retries
-        self._retry_delay = retry_delay
-
-    def _run_with_retries(self, method, *args, **kwargs):
-        retries = 0
-
-        while True:
-            try:
-                return method(*args, **kwargs)
-            except requests.RequestException as e:
-                self._logger.debug("Retrying request %s because of %s", args[0], e)
-                if retries >= self._retires:
-                    raise
-
-                retries += 1
-                time.sleep(self._retry_delay)
-
-    def get(self, *args, **kwargs):
-        if self._timeout is not None:
-            kwargs['timeout'] = self._timeout
-        return self._run_with_retries(requests.get, *args, **kwargs)
-
-    def post(self, *args, **kwargs):
-        if self._timeout is not None:
-            kwargs['timeout'] = self._timeout
-        return self._run_with_retries(requests.post, *args, **kwargs)
-
-
 class SessionStartCommand(object):
     """
 
     """
     _logger = get_log()
 
-    def __init__(self, scheme_host, username, password, runner=None):
+    def __init__(self, transport, scheme_host, username, password):
         """
         """
+        self._transport = transport
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
-        self._runner = runner if runner is not None else RequestsHttpTransport()
 
     def send(self):
         """
@@ -91,7 +56,7 @@ class SessionStartCommand(object):
         params['password'] = self._password
 
         self._logger.debug('Making session start request to %s', url)
-        r = self._runner.get(url, params=params)
+        r = self._transport.get(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
@@ -108,9 +73,10 @@ class _AuthenticatedCommand(object):
     """
     _logger = get_log()
 
-    def __init__(self, scheme_host, session_id):
+    def __init__(self, transport, scheme_host, session_id):
         """
         """
+        self._transport = transport
         self._scheme_host = scheme_host
         self._session_id = session_id
 
@@ -127,14 +93,6 @@ class SessionEndCommand(_AuthenticatedCommand):
 
     """
 
-    def __init__(self, scheme_host, session_id, runner=None):
-        """
-
-
-        """
-        super(SessionEndCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsHttpTransport()
-
     def send(self):
         """
 
@@ -144,7 +102,7 @@ class SessionEndCommand(_AuthenticatedCommand):
         params = _get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
 
         self._logger.debug('Making session close request to %s', url)
-        r = self._runner.post(url, params=params)
+        r = self._transport.post(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
@@ -161,14 +119,6 @@ class NodeEnableCommand(_AuthenticatedCommand):
 
     """
 
-    def __init__(self, scheme_host, session_id, runner=None):
-        """
-
-
-        """
-        super(NodeEnableCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsHttpTransport()
-
     def send(self, server):
         """
         """
@@ -179,7 +129,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         params['status'] = 1
 
         self._logger.debug('Making node enable request for %s', server)
-        r = self._runner.post(url, params=params)
+        r = self._transport.post(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
@@ -195,12 +145,6 @@ class NodeDisableCommand(_AuthenticatedCommand):
 
     """
 
-    def __init__(self, scheme_host, session_id, runner=None):
-        """
-        """
-        super(NodeDisableCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsHttpTransport()
-
     def send(self, server):
         """
         """
@@ -211,7 +155,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         params['status'] = 0
 
         self._logger.debug('Making node disable request for %s', server)
-        r = self._runner.post(url, params=params)
+        r = self._transport.post(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
@@ -227,13 +171,6 @@ class NodeStatusCommand(_AuthenticatedCommand):
 
     """
 
-    def __init__(self, scheme_host, session_id, runner=None):
-        """
-
-        """
-        super(NodeStatusCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsHttpTransport()
-
     def send(self, server):
         """
         """
@@ -242,7 +179,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
         params['name'] = server
 
         self._logger.debug('Making node status request for %s', server)
-        r = self._runner.get(url, params=params)
+        r = self._transport.get(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
@@ -268,12 +205,6 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
 
     """
 
-    def __init__(self, scheme_host, session_id, runner=None):
-        """
-        """
-        super(NodeActiveConnectionsCommand, self).__init__(scheme_host, session_id)
-        self._runner = runner if runner is not None else RequestsHttpTransport()
-
     def send(self, server):
         """
         """
@@ -282,7 +213,7 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         params['name'] = server
 
         self._logger.debug('Making active connection count request for %s', server)
-        r = self._runner.get(url, params=params)
+        r = self._transport.get(url, params=params)
         self._logger.debug(r.text)
         json = r.json()
 
