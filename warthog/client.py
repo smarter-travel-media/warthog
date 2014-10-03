@@ -24,8 +24,8 @@ class WarthogCommandFactory(object):
             self._transport, scheme_host, session_id)
 
     def get_server_status(self, scheme_host, session_id):
-        return warthog.core.NodeStatusCommand \
-            (self._transport, scheme_host, session_id)
+        return warthog.core.NodeStatusCommand(
+            self._transport, scheme_host, session_id)
 
     def get_enable_server(self, scheme_host, session_id):
         return warthog.core.NodeEnableCommand(
