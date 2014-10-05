@@ -52,7 +52,7 @@ def get_default_cmd_factory():
     return WarthogCommandFactory(warthog.transport.get_transport())
 
 
-class _SessionManager(object):
+class _SessionContext(object):
     def __init__(self, scheme_host, username, password, commands):
         self._scheme_host = scheme_host
         self._username = username
@@ -117,7 +117,7 @@ class WarthogClient(object):
     def context(self):
         self._logger.debug('Creating new session context for %s', self._scheme_host)
 
-        return _SessionManager(
+        return _SessionContext(
             self._scheme_host, self._username, self._password, self._commands)
 
     def get_status(self, server):
