@@ -41,6 +41,14 @@ class WarthogCommandFactory(object):
 
 
 def get_default_cmd_factory():
+    """Get a :class:`WarthogCommandFactory` instance configured to use
+    a default :class:`requests.Session` instance which has been configured
+    to use the TLS version expected by the A10 when using https connections.
+
+    :return: Default command factory for building new commands to interact
+        with the A10 load balancer
+    :rtype: WarthogCommandFactory
+    """
     return WarthogCommandFactory(warthog.transport.get_transport())
 
 
@@ -67,6 +75,22 @@ class _SessionManager(object):
 
 
 def try_repeatedly(method, interval, max_retries):
+    """Execute a method, retrying if it fails due to a transient error
+    up to a given number of times, with specified interval in between
+    each try.
+
+    Execution is retried when ``method`` raises a :class:`warthog.exceptions.WarthogError``
+    exception with an ``api_code`` that indicates the error is a type
+    that may be fixed by simply trying the call again. The set of expected
+    transient errors is contained in :data:`warthog.core.TRANSIENT_ERRORS`.
+
+    :param func method: Method that accepts no arguments that should be executed.
+    :param float interval: How long to sleep in between each retry.
+    :param int max_retries: How many retry attempts to make at executing the
+        method. Note that the method will be executed at least once, such as
+        when ``max_retries`` is zero.
+    :return: The results of running the given method
+    """
     retries = 0
 
     while True:
