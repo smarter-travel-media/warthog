@@ -16,10 +16,10 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
-def get_transport(disable_verify=False, use_tlsv1=True):
+def get_transport(verify=True, use_tlsv1=True):
     transport = requests.Session()
 
-    if disable_verify:
+    if not verify:
         warnings.filterwarnings("ignore", category=InsecureRequestWarning)
         transport.verify = False
 
