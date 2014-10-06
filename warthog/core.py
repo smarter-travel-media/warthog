@@ -57,6 +57,8 @@ def get_log():
 class SessionStartCommand(object):
     """Command to authenticate with the load balancer and start a new session
     to be used by subsequent commands.
+
+    This class is thread safe.
     """
     _logger = get_log()
 
@@ -140,7 +142,10 @@ class _AuthenticatedCommand(object):
 
 
 class SessionEndCommand(_AuthenticatedCommand):
-    """Command for ending a previously authenticated session with the load balancer. """
+    """Command for ending a previously authenticated session with the load balancer.
+
+    This class is thread safe.
+    """
 
     def send(self):
         """Close an existing session and return ``True`` if closing it was successful.
@@ -148,7 +153,7 @@ class SessionEndCommand(_AuthenticatedCommand):
         :return: True if the current session could be closed
         :rtype: bool
         :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognized the session this command is being run as part of
+            did not recognized the session this command is being run as part of.
         :raises warthog.exceptions.WarthogAuthCloseError: If the session could not be
             closed. This is usually the result of the session ID being invalid or the
             session already being closed before this command is run.
@@ -172,7 +177,10 @@ class SessionEndCommand(_AuthenticatedCommand):
 
 
 class NodeEnableCommand(_AuthenticatedCommand):
-    """Command to mark a particular server as enabled."""
+    """Command to mark a particular server as enabled.
+
+    This class is thread safe.
+    """
 
     def send(self, server):
         """Mark the given server as 'enabled' at the node level and return
@@ -181,7 +189,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         :return: True if the server was marked as enabled
         :rtype: bool
         :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognized the session this command is being run as part of
+            did not recognized the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeEnableError: If the server could
@@ -208,7 +216,10 @@ class NodeEnableCommand(_AuthenticatedCommand):
 
 
 class NodeDisableCommand(_AuthenticatedCommand):
-    """Command to mark a particular server as disabled."""
+    """Command to mark a particular server as disabled.
+
+    This class is thread safe.
+    """
 
     def send(self, server):
         """Mark the given server as 'disabled' at the node level and return
@@ -217,7 +228,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         :return: True if the server was marked as disabled
         :rtype: bool
         :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognized the session this command is being run as part of
+            did not recognized the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeEnableError: If the server could
@@ -244,7 +255,10 @@ class NodeDisableCommand(_AuthenticatedCommand):
 
 
 class NodeStatusCommand(_AuthenticatedCommand):
-    """Command to get the current status ('enabled', 'disabled') of a particular server."""
+    """Command to get the current status ('enabled', 'disabled') of a particular server.
+
+    This class is thread safe.
+    """
 
     def send(self, server):
         """Get the current status of the given server at the node level and return
@@ -253,7 +267,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
         :return: The status of the server as a constant string
         :rtype: basestring
         :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognized the session this command is being run as part of
+            did not recognized the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeStatusError: If the status of the server
@@ -285,7 +299,10 @@ class NodeStatusCommand(_AuthenticatedCommand):
 
 
 class NodeActiveConnectionsCommand(_AuthenticatedCommand):
-    """Command to get the number of active connections to a particular server."""
+    """Command to get the number of active connections to a particular server.
+
+    This class is thread safe.
+    """
 
     def send(self, server):
         """Get the current number of active connections for a node as an int.
@@ -293,7 +310,7 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         :return: The number of active connections for a node across all ports
         :rtype: int
         :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognized the session this command is being run as part of
+            did not recognized the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeStatusError: If the number of active

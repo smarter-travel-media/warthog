@@ -65,6 +65,13 @@ def get_default_cmd_factory():
 
 
 class _SessionContext(object):
+    """Context manager implementation that begins a new authenticated session
+    with the load balancer when entering the context and cleans it up after
+    exiting the context.
+
+    This class is not thread safe.
+    """
+
     def __init__(self, scheme_host, username, password, commands):
         self._scheme_host = scheme_host
         self._username = username
@@ -73,12 +80,20 @@ class _SessionContext(object):
         self._session = None
 
     def __enter__(self):
+        """Begin a new authenticated session with the load balancer and
+        return the session ID when entering the context.
+
+        :return: The ID of the new session
+        """
         start_cmd = self._commands.get_session_start(
             self._scheme_host, self._username, self._password)
         self._session = start_cmd.send()
         return self._session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Close the previously opened session and do *not* suppress any
+        exceptions encountered within the context.
+        """
         end_cmd = self._commands.get_session_end(
             self._scheme_host, self._session)
         end_cmd.send()
@@ -126,19 +141,19 @@ class WarthogClient(object):
         self._interval = wait_interval
         self._commands = commands if commands is not None else get_default_cmd_factory()
 
-    def context(self):
+    def _context(self):
         self._logger.debug('Creating new session context for %s', self._scheme_host)
 
         return _SessionContext(
             self._scheme_host, self._username, self._password, self._commands)
 
     def get_status(self, server):
-        with self.context() as session:
+        with self._context() as session:
             cmd = self._commands.get_server_status(self._scheme_host, session)
             return cmd.send(server)
 
     def disable_server(self, server, wait_for_connections=True, max_retries=5):
-        with self.context() as session:
+        with self._context() as session:
             disable = self._commands.get_disable_server(self._scheme_host, session)
             disable.send(server)
 
@@ -163,7 +178,7 @@ class WarthogClient(object):
             retries += 1
 
     def enable_server(self, server, max_retries=5):
-        with self.context() as session:
+        with self._context() as session:
             cmd = self._commands.get_enable_server(self._scheme_host, session)
             method = lambda: cmd.send(server)
 
