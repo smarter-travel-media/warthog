@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 class WarthogError(Exception):
     def __init__(self, msg, api_msg=None, api_code=None):
+        super(WarthogError, self).__init__()
         self.msg = msg
         self.api_msg = api_msg
         self.api_code = api_code
