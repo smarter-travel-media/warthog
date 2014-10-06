@@ -24,7 +24,16 @@ import warthog.transport
 
 
 class WarthogCommandFactory(object):
+    """Factory for getting new :mod:`warthog.core` command instances that each
+    perform some type of request against the load balancer API.
+    """
+
     def __init__(self, transport):
+        """Set the HTTP session that will be used for executing all commands.
+
+        :param requests.Session transport: Session instance to executing all
+            commands.
+        """
         self._transport = transport
 
     def get_session_start(self, scheme_host, username, password):
@@ -52,7 +61,7 @@ class WarthogCommandFactory(object):
             self._transport, scheme_host, session_id)
 
 
-def get_default_cmd_factory():
+def _get_default_cmd_factory():
     """Get a :class:`WarthogCommandFactory` instance configured to use
     a default :class:`requests.Session` instance which has been configured
     to use the TLS version expected by the A10 when using https connections.
@@ -73,6 +82,15 @@ class _SessionContext(object):
     """
 
     def __init__(self, scheme_host, username, password, commands):
+        """
+
+
+
+        :param scheme_host:
+        :param username:
+        :param password:
+        :param commands:
+        """
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
@@ -80,10 +98,11 @@ class _SessionContext(object):
         self._session = None
 
     def __enter__(self):
-        """Begin a new authenticated session with the load balancer and
-        return the session ID when entering the context.
+        """
 
-        :return: The ID of the new session
+
+
+        :return:
         """
         start_cmd = self._commands.get_session_start(
             self._scheme_host, self._username, self._password)
@@ -91,8 +110,9 @@ class _SessionContext(object):
         return self._session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Close the previously opened session and do *not* suppress any
-        exceptions encountered within the context.
+        """
+
+        :return:
         """
         end_cmd = self._commands.get_session_end(
             self._scheme_host, self._session)
@@ -101,58 +121,84 @@ class _SessionContext(object):
         return False
 
 
-def try_repeatedly(method, interval, max_retries):
-    """Execute a method, retrying if it fails due to a transient error
-    up to a given number of times, with specified interval in between
-    each try.
-
-    Execution is retried when ``method`` raises a :class:`warthog.exceptions.WarthogError``
-    exception with an ``api_code`` that indicates the error is a type
-    that may be fixed by simply trying the call again. The set of expected
-    transient errors is contained in :data:`warthog.core.TRANSIENT_ERRORS`.
-
-    :param func method: Method that accepts no arguments that should be executed.
-    :param float interval: How long to sleep in between each retry.
-    :param int max_retries: How many retry attempts to make at executing the
-        method. Note that the method will be executed at least once, such as
-        when ``max_retries`` is zero.
-    :return: The results of running the given method
-    """
-    retries = 0
-
-    while True:
-        try:
-            return method()
-        except warthog.exceptions.WarthogError as e:
-            if e.api_code not in warthog.core.TRANSIENT_ERRORS or retries >= max_retries:
-                raise
-            time.sleep(interval)
-            retries += 1
-
-
 class WarthogClient(object):
+    """Client for interacting with an A10 load balancer to get the status
+    of nodes managed by it, enable them at the node level, and disable them
+    at the node level.
+
+    Note that all methods in this client that operate on servers work at the
+    node level. That is, servers are disabled for all groups they are in or
+    potentially enabled for all groups they are in. It may still be possible
+    for a node to be disabled in some group but enabled at the node level.
+    This client does not handle that case and assumes that it is the only
+    mechanism being used to operate on nodes.
+
+    In practice this should not be an issue since the primary use case of this
+    client is to safely remove a node from the load balancer so that it may be
+    deployed to. If a node remains disabled for some group after being enabled
+    at the node level, so be it.
+
+    This class is thread safe.
+    """
     _logger = warthog.core.get_log()
     _default_wait_interval = 2
 
     def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
+        """
+
+
+
+
+        :param scheme_host:
+        :param username:
+        :param password:
+        :param wait_interval:
+        :param commands:
+        """
         self._scheme_host = scheme_host
         self._username = username
         self._password = password
         self._interval = wait_interval
-        self._commands = commands if commands is not None else get_default_cmd_factory()
+        self._commands = commands if commands is not None else _get_default_cmd_factory()
 
     def _context(self):
+        """Get a new :class:`_SessionContext` instance."""
         self._logger.debug('Creating new session context for %s', self._scheme_host)
 
         return _SessionContext(
             self._scheme_host, self._username, self._password, self._commands)
 
     def get_status(self, server):
+        """Get the current status of the given server, at the node level.
+
+        The status will be one of the constants :data:`warthog.core.STATUS_ENABLED`
+        or :data:`warthog.core.STATUS_DISABLED`.
+
+        :param basestring server: Hostname of the server to get the status of.
+        :return: The current status of the server, enabled or disabled.
+        :rtype: basestring
+        :raises warthog.exceptions.WarthogAuthFailureError:
+        :raises warthog.exceptions.WarthogNoSuchNodeError:
+        :raises warthog.exceptions.WarthogNodeStatusError:
+        """
         with self._context() as session:
             cmd = self._commands.get_server_status(self._scheme_host, session)
             return cmd.send(server)
 
     def disable_server(self, server, wait_for_connections=True, max_retries=5):
+        """
+
+
+
+        :param basestring server:
+        :param bool wait_for_connections:
+        :param int max_retries:
+        :return:
+        :rtype: bool
+        :raises warthog.exceptions.WarthogAuthFailureError:
+        :raises warthog.exceptions.WarthogNoSuchNodeError:
+        :raises warthog.exceptions.WarthogNodeDisableError:
+        """
         with self._context() as session:
             disable = self._commands.get_disable_server(self._scheme_host, session)
             disable.send(server)
@@ -178,11 +224,41 @@ class WarthogClient(object):
             retries += 1
 
     def enable_server(self, server, max_retries=5):
+        """
+
+
+
+        :param server:
+        :param max_retries:
+        :return:
+        :rtype: bool
+        :raises warthog.exceptions.WarthogAuthFailureError:
+        :raises warthog.exceptions.WarthogNoSuchNodeError:
+        :raises warthog.exceptions.WarthogNodeEnableError:
+        """
         with self._context() as session:
             cmd = self._commands.get_enable_server(self._scheme_host, session)
             method = lambda: cmd.send(server)
 
             # This function will only run the method once if max_retries is zero
-            return try_repeatedly(method, self._interval, max_retries)
+            return self._try_repeatedly(method, max_retries)
+
+    def _try_repeatedly(self, method, max_retries):
+        """Execute a method, retrying if it fails due to a transient error
+        up to a given number of times, with the instance-wide interval in
+        between each try.
+        """
+        retries = 0
+
+        while True:
+            try:
+                return method()
+            except warthog.exceptions.WarthogError as e:
+                if e.api_code not in warthog.core.TRANSIENT_ERRORS or retries >= max_retries:
+                    raise
+                self._logger.debug(
+                    "Encountered transient error %s - %s, retrying... ", e.api_code, e.api_msg)
+                time.sleep(self._interval)
+                retries += 1
 
 
