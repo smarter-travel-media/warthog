@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+#
+# Warthog - Client for A10 load balancers
+#
+# Copyright 2014 Smarter Travel
+#
+# Available under the MIT license. See LICENSE for details.
+#
 
 """
+warthog.transport
+~~~~~~~~~~~~~~~~~
 """
 
 from __future__ import print_function, division
@@ -8,7 +17,9 @@ from __future__ import print_function, division
 import ssl
 
 import warnings
+
 import requests
+
 from requests.adapters import (
     HTTPAdapter,
     DEFAULT_POOLBLOCK,
@@ -18,6 +29,8 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
+# Default to using the SSL/TLS version that the A10 requires instead of
+# the default that the requests/urllib3 library picks.
 DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
 
