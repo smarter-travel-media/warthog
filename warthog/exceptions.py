@@ -41,6 +41,10 @@ class WarthogAuthFailureError(WarthogError):
     pass
 
 
+class WarthogNoSuchNodeError(WarthogError):
+    pass
+
+
 class WarthogNodeStatusError(WarthogError):
     pass
 

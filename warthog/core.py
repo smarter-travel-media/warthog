@@ -97,9 +97,11 @@ class SessionStartCommand(object):
         json = r.json()
 
         if 'session_id' not in json:
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogAuthFailureError(
-                'Authentication failure with {0}'.format(self._scheme_host), msg, code)
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogAuthFailureError,
+                'Authentication failure with {0}'.format(self._scheme_host),
+                json['response'])
+
         return json['session_id']
 
 
@@ -136,11 +138,7 @@ class _AuthenticatedCommand(object):
 
 
 class SessionEndCommand(_AuthenticatedCommand):
-    """
-
-
-
-    """
+    """Command for ending a previously authenticated session with the load balancer. """
 
     def send(self):
         """
@@ -156,10 +154,12 @@ class SessionEndCommand(_AuthenticatedCommand):
         json = r.json()
 
         if json['response']['status'] == 'fail':
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogAuthCloseError(
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogAuthCloseError,
                 'Could not close session {0} on {1}'.format(
-                    self._session_id, self._scheme_host), msg, code)
+                    self._session_id, self._scheme_host),
+                json['response'])
+
         return True
 
 
@@ -183,9 +183,11 @@ class NodeEnableCommand(_AuthenticatedCommand):
         json = r.json()
 
         if json['response']['status'] == 'fail':
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogNodeEnableError(
-                'Could not enable node {0}'.format(server), msg, code)
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogNodeEnableError,
+                'Could not enable node {0}'.format(server),
+                json['response'])
+
         return True
 
 
@@ -209,9 +211,11 @@ class NodeDisableCommand(_AuthenticatedCommand):
         json = r.json()
 
         if json['response']['status'] == 'fail':
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogNodeDisableError(
-                'Could not disable node {0}'.format(server), msg, code)
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogNodeDisableError,
+                'Could not disable node {0}'.format(server),
+                json['response'])
+
         return True
 
 
@@ -233,9 +237,10 @@ class NodeStatusCommand(_AuthenticatedCommand):
         json = r.json()
 
         if 'server_stat' not in json:
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogNodeStatusError(
-                'Could not get status of {0}'.format(server), msg, code)
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogNodeStatusError,
+                'Could not get status of {0}'.format(server),
+                json['response'])
 
         status = json['server_stat']['status']
         if status == 0:
@@ -267,17 +272,24 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         json = r.json()
 
         if 'server_stat' not in json:
-            msg, code = _extract_error_message(json['response'])
-            raise warthog.exceptions.WarthogNodeStatusError(
-                'Could not get active connection count of {0}'.format(server), msg, code)
+            raise _get_exception_for_response(
+                warthog.exceptions.WarthogNodeStatusError,
+                'Could not get status of {0}'.format(server),
+                json['response'])
+
         return json['server_stat']['cur_conns']
 
 
 def _extract_error_message(response):
-    """
+    """Get a two element tuple of the form ``msg, code`` where ``msg`` is
+    an error message returned by the API and ``code`` is a numeric code associated
+    with that particular error.
 
-    :param response:
-    :return:
+    :param dict response: Error JSON response from the API
+    :return: Two element tuple of an error message and code
+    :rtype: tuple
+    :raises ValueError: If the JSON response does not correspond to an error
+        from the API
     """
     if response['status'] == 'fail':
         return response['err']['msg'].strip(), response['err']['code']
@@ -285,23 +297,53 @@ def _extract_error_message(response):
         "Unexpected response format from request: {0}".format(response))
 
 
-def _get_base_url(scheme_host):
+def _get_exception_for_response(default_cls, message, response):
+    """Get a :class:`warthog.exceptions.WarthogError` subclass specific to
+    the error code contained in the response with the given message, or an
+    instance the given default class if this is not an error associated with
+    a specific exception.
+
+    :param warthog.exceptions.WarthogError default_cls: Error class to use for
+        this error response if there isn't a more appropriate one for this particular
+        type of error.
+    :param basestring message: Main error message to use for the exception instance
+    :param dict response: Parsed response JSON from the API call
+    :return: A WarthogError instance to raise for the error response received
+        from an API call.
+    :rtype: warthog.exceptions.WarthogError
     """
+    msg, code = _extract_error_message(response)
+
+    if code == ERROR_CODE_NO_SUCH_SERVER:
+        cls = warthog.exceptions.WarthogNoSuchNodeError
+    else:
+        cls = default_cls
+    return cls(message, api_msg=msg, api_code=code)
 
 
-    :param scheme_host:
-    :return:
+def _get_base_url(scheme_host):
+    """Get a URL to API of the load balancer, not including any query string
+    parameters.
+
+    :param basestring scheme_host: The scheme, host, and port portions of the
+        URL of the load balancer.
+    :return: The URL of the load balancer API
+    :rtype: basestring
     """
     return urlparse.urljoin(
         scheme_host, 'services/rest/{version}/'.format(version=_API_VERSION))
 
 
 def _get_base_query_params(action, session_id=None):
-    """
+    """Get a dictionary of query string parameters to pass to the load balancer
+    API based on the given action and optional session ID.
 
-    :param action:
-    :param session_id:
-    :return:
+    :param basestring action: Action to specify as a query string parameter
+    :param basestring session_id: Optional session ID if we are building
+        parameters to execute a command after having already authenticated.
+    :return: Dictionary of query string parameters to include on a request
+        to the load balancer API.
+    :rtype: dict
     """
     params = {
         'format': 'json',
