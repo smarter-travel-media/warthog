@@ -17,9 +17,7 @@ from __future__ import print_function, division
 import ssl
 
 import warnings
-
 import requests
-
 from requests.adapters import (
     HTTPAdapter,
     DEFAULT_POOLBLOCK,
@@ -33,7 +31,14 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # the default that the requests/urllib3 library picks.
 DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
+# TODO: Make this a factory, there's nothing wrong with creating a new Session
+# each time. That's what would happen anyway with requests.get()
 
+
+# TODO: Is this a good idea? Should be we sharing a single Session instance
+# between all callers of the WarthogClient? Should we be using a new session
+# per method call in WarthogClient? Session *seems* thread safe as long as you
+# don't explicitly mutate it.
 def get_transport(verify=True, ssl_version=DEFAULT_SSL_VERSION):
     """Get a :class:`requests.Session` instance that has been configured
     according to the given parameters.
