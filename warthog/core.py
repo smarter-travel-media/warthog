@@ -26,6 +26,8 @@ STATUS_DISABLED = 'disabled'
 
 ERROR_CODE_GRACEFUL_SHUTDOWN = 67174416
 
+ERROR_CODE_INVALID_SESSION = 1009
+
 ERROR_CODE_NO_SUCH_SERVER = 67174402
 
 TRANSIENT_ERRORS = frozenset([
@@ -145,6 +147,8 @@ class SessionEndCommand(_AuthenticatedCommand):
 
         :return: True if the current session could be closed
         :rtype: bool
+        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
+            did not recognized the session this command is being run as part of
         :raises warthog.exceptions.WarthogAuthCloseError: If the session could not be
             closed. This is usually the result of the session ID being invalid or the
             session already being closed before this command is run.
@@ -176,6 +180,8 @@ class NodeEnableCommand(_AuthenticatedCommand):
 
         :return: True if the server was marked as enabled
         :rtype: bool
+        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
+            did not recognized the session this command is being run as part of
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeEnableError: If the server could
@@ -210,6 +216,8 @@ class NodeDisableCommand(_AuthenticatedCommand):
 
         :return: True if the server was marked as disabled
         :rtype: bool
+        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
+            did not recognized the session this command is being run as part of
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeEnableError: If the server could
@@ -244,9 +252,11 @@ class NodeStatusCommand(_AuthenticatedCommand):
 
         :return: The status of the server as a constant string
         :rtype: basestring
+        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
+            did not recognized the session this command is being run as part of
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
-        raises warthog.exceptions.WarthogNodeStatusError: If the status of the server
+        :raises warthog.exceptions.WarthogNodeStatusError: If the status of the server
             could not be determined for any other reason.
         """
         url = _get_base_url(self._scheme_host)
@@ -282,9 +292,11 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
 
         :return: The number of active connections for a node across all ports
         :rtype: int
+        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
+            did not recognized the session this command is being run as part of
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
-        raises warthog.exceptions.WarthogNodeStatusError: If the number of active
+        :raises warthog.exceptions.WarthogNodeStatusError: If the number of active
             connections to the server could not be determined for any other reason.
         """
         url = _get_base_url(self._scheme_host)
@@ -324,7 +336,9 @@ def _get_exception_for_response(default_cls, message, response):
     """
     msg, code = _extract_error_message(response)
 
-    if code == ERROR_CODE_NO_SUCH_SERVER:
+    if code == ERROR_CODE_INVALID_SESSION:
+        cls = warthog.exceptions.WarthogInvalidSessionError
+    elif code == ERROR_CODE_NO_SUCH_SERVER:
         cls = warthog.exceptions.WarthogNoSuchNodeError
     else:
         cls = default_cls
