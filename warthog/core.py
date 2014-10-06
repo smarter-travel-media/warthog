@@ -10,7 +10,10 @@
 """
 warthog.core
 ~~~~~~~~~~~~
+
+Basic building blocks for authentication and interaction with a load balancer.
 """
+
 import logging
 import urlparse
 
@@ -22,6 +25,8 @@ STATUS_ENABLED = 'enabled'
 STATUS_DISABLED = 'disabled'
 
 ERROR_CODE_GRACEFUL_SHUTDOWN = 67174416
+
+ERROR_CODE_NO_SUCH_SERVER = 67174402
 
 TRANSIENT_ERRORS = frozenset([
     ERROR_CODE_GRACEFUL_SHUTDOWN
@@ -39,17 +44,30 @@ _ACTION_CLOSE_SESSION = 'session.close'
 
 
 def get_log():
+    """Get the :class:`logging.Logger` instance used by the Warthog library.
+
+    :return: Logger for the entire library
+    :rtype: logging.Logger
+    """
     return logging.getLogger('warthog')
 
 
 class SessionStartCommand(object):
-    """
-
+    """Command to authenticate with the load balancer and start a new session
+    to be used by subsequent commands.
     """
     _logger = get_log()
 
     def __init__(self, transport, scheme_host, username, password):
-        """
+        """Set the transport layer and necessary credentials to authenticate with
+        the load balancer.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring username: Name of the user to authenticate with.
+        :param basestring password: Password for the user to authenticate with.
         """
         self._transport = transport
         self._scheme_host = scheme_host
@@ -57,7 +75,16 @@ class SessionStartCommand(object):
         self._password = password
 
     def send(self):
-        """
+        """Make an authentication request and return the session token that should
+        be included in all subsequent requests to the load balancer.
+
+        :return: The session token that should be used for all subsequent requests
+            made to the load balancer.
+        :rtype: unicode
+        :raises warthog.exceptions.WarthogAuthFailureError: If the authentication
+            failed for some reason. The exception will contain an error message and
+            error code that provides more detail about the failure. Common reasons
+            for this error include using invalid username or password.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_AUTHENTICATE)
@@ -77,20 +104,33 @@ class SessionStartCommand(object):
 
 
 class _AuthenticatedCommand(object):
-    """
+    """Base class for making requests to the load balancer using an existing session
+    ID from a previous :class:`SessionStartCommand` request.
 
+    :ivar requests.Session _transport:
+    :ivar basestring _scheme_host:
+    :ivar basestring _session_id:
     """
     _logger = get_log()
 
     def __init__(self, transport, scheme_host, session_id):
-        """
+        """Set the requests transport layer, scheme and host of the load balancer,
+        and existing session ID to use for authentication.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring session_id: Session ID from a previous authentication request
+            made to the load balancer.
         """
         self._transport = transport
         self._scheme_host = scheme_host
         self._session_id = session_id
 
     def send(self, *args):
-        """
+        """Abstract method for making a request to the load balancer API and parsing
+        the result and returning any meaningful information (implementation specific).
         """
         raise NotImplementedError()
 
@@ -228,7 +268,7 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
 
         if 'server_stat' not in json:
             msg, code = _extract_error_message(json['response'])
-            raise warthog.exc.WarthogNodeStatusError(
+            raise warthog.exceptions.WarthogNodeStatusError(
                 'Could not get active connection count of {0}'.format(server), msg, code)
         return json['server_stat']['cur_conns']
 
