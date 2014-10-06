@@ -141,9 +141,13 @@ class SessionEndCommand(_AuthenticatedCommand):
     """Command for ending a previously authenticated session with the load balancer. """
 
     def send(self):
-        """
+        """Close an existing session and return ``True`` if closing it was successful.
 
-
+        :return: True if the current session could be closed
+        :rtype: bool
+        :raises warthog.exceptions.WarthogAuthCloseError: If the session could not be
+            closed. This is usually the result of the session ID being invalid or the
+            session already being closed before this command is run.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
@@ -160,16 +164,22 @@ class SessionEndCommand(_AuthenticatedCommand):
                     self._session_id, self._scheme_host),
                 json['response'])
 
-        return True
+        return json['response']['status'] == 'OK'
 
 
 class NodeEnableCommand(_AuthenticatedCommand):
-    """
-
-    """
+    """Command to mark a particular server as enabled."""
 
     def send(self, server):
-        """
+        """Mark the given server as 'enabled' at the node level and return
+        ``True`` if it was successfully enabled.
+
+        :return: True if the server was marked as enabled
+        :rtype: bool
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
+            recognized by the load balancer.
+        :raises warthog.exceptions.WarthogNodeEnableError: If the server could
+            not be enabled for any other reason.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
@@ -188,16 +198,22 @@ class NodeEnableCommand(_AuthenticatedCommand):
                 'Could not enable node {0}'.format(server),
                 json['response'])
 
-        return True
+        return json['response']['status'] == 'OK'
 
 
 class NodeDisableCommand(_AuthenticatedCommand):
-    """
-
-    """
+    """Command to mark a particular server as disabled."""
 
     def send(self, server):
-        """
+        """Mark the given server as 'disabled' at the node level and return
+        ``True`` if it was successfully disabled.
+
+        :return: True if the server was marked as disabled
+        :rtype: bool
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
+            recognized by the load balancer.
+        :raises warthog.exceptions.WarthogNodeEnableError: If the server could
+            not be disabled for any other reason.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
@@ -216,16 +232,22 @@ class NodeDisableCommand(_AuthenticatedCommand):
                 'Could not disable node {0}'.format(server),
                 json['response'])
 
-        return True
+        return json['response']['status'] == 'OK'
 
 
 class NodeStatusCommand(_AuthenticatedCommand):
-    """
-
-    """
+    """Command to get the current status ('enabled', 'disabled') of a particular server."""
 
     def send(self, server):
-        """
+        """Get the current status of the given server at the node level and return
+        one of the `STATUS_ENABLED` or `STATUS_DISABLED` constants.
+
+        :return: The status of the server as a constant string
+        :rtype: basestring
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
+            recognized by the load balancer.
+        raises warthog.exceptions.WarthogNodeStatusError: If the status of the server
+            could not be determined for any other reason.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_STATUS, self._session_id)
@@ -247,20 +269,23 @@ class NodeStatusCommand(_AuthenticatedCommand):
             return STATUS_DISABLED
         if status == 1:
             return STATUS_ENABLED
+
         raise warthog.exceptions.WarthogNodeStatusError(
             'Unknown status of {0}: status={1}'.format(server, status))
 
 
 class NodeActiveConnectionsCommand(_AuthenticatedCommand):
-    """
-
-
-
-
-    """
+    """Command to get the number of active connections to a particular server."""
 
     def send(self, server):
-        """
+        """Get the current number of active connections for a node as an int.
+
+        :return: The number of active connections for a node across all ports
+        :rtype: int
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
+            recognized by the load balancer.
+        raises warthog.exceptions.WarthogNodeStatusError: If the number of active
+            connections to the server could not be determined for any other reason.
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_STATISTICS, self._session_id)
