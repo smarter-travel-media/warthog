@@ -15,9 +15,9 @@ Basic building blocks for authentication and interaction with a load balancer.
 """
 
 import logging
-import urlparse
 
 import warthog.exceptions
+from .six.moves.urllib import parse
 
 
 STATUS_ENABLED = 'enabled'
@@ -371,7 +371,7 @@ def _get_base_url(scheme_host):
     """Get a URL to API of the load balancer, not including any query string
     parameters.
     """
-    return urlparse.urljoin(
+    return parse.urljoin(
         scheme_host, 'services/rest/{version}/'.format(version=_API_VERSION))
 
 
