@@ -296,7 +296,8 @@ class WarthogClient(object):
         errors and waiting for the server to enter the expected, enabled state.
 
         If ``max_retries`` is zero, no attempt will be made to retry on transient errors
-        or to wait until the server enters the expected, enabled state.
+        or to wait until the server enters the expected, enabled state, the method will
+        return immediately.
 
         :param basestring server: Hostname of the server to enable
         :param int max_retries: Max number of times to sleep and retry when encountering
