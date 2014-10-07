@@ -28,49 +28,49 @@ class WarthogCommandFactory(object):
     perform some type of request against the load balancer API.
     """
 
-    def __init__(self, transport):
-        """Set the HTTP session that will be used for executing all commands.
+    def __init__(self, transport_factory):
+        """Set the a factory that will create new HTTP Sessions instances to be
+        used for executing commands.
 
-        :param requests.Session transport: Session instance to executing all
-            commands.
+        :param func transport_factory: Callable for creating new Session instances
+            for executing commands.
         """
-        self._transport = transport
+        self._transport_factory = transport_factory
 
     def get_session_start(self, scheme_host, username, password):
         return warthog.core.SessionStartCommand(
-            self._transport, scheme_host, username, password)
+            self._transport_factory(), scheme_host, username, password)
 
     def get_session_end(self, scheme_host, session_id):
         return warthog.core.SessionEndCommand(
-            self._transport, scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id)
 
     def get_server_status(self, scheme_host, session_id):
         return warthog.core.NodeStatusCommand(
-            self._transport, scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id)
 
     def get_enable_server(self, scheme_host, session_id):
         return warthog.core.NodeEnableCommand(
-            self._transport, scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id)
 
     def get_disable_server(self, scheme_host, session_id):
         return warthog.core.NodeDisableCommand(
-            self._transport, scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id)
 
     def get_active_connections(self, scheme_host, session_id):
         return warthog.core.NodeActiveConnectionsCommand(
-            self._transport, scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id)
 
 
 def _get_default_cmd_factory():
-    """Get a :class:`WarthogCommandFactory` instance configured to use
-    a default :class:`requests.Session` instance which has been configured
-    to use the TLS version expected by the A10 when using https connections.
+    """Get a :class:`WarthogCommandFactory` instance configured to use the
+    TLS version expected by the A10 when using https connections.
 
     :return: Default command factory for building new commands to interact
         with the A10 load balancer
     :rtype: WarthogCommandFactory
     """
-    return WarthogCommandFactory(warthog.transport.get_transport())
+    return WarthogCommandFactory(warthog.transport.get_factory())
 
 
 class _SessionContext(object):

@@ -31,17 +31,10 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # the default that the requests/urllib3 library picks.
 DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
-# TODO: Make this a factory, there's nothing wrong with creating a new Session
-# each time. That's what would happen anyway with requests.get()
 
-
-# TODO: Is this a good idea? Should be we sharing a single Session instance
-# between all callers of the WarthogClient? Should we be using a new session
-# per method call in WarthogClient? Session *seems* thread safe as long as you
-# don't explicitly mutate it.
-def get_transport(verify=True, ssl_version=DEFAULT_SSL_VERSION):
-    """Get a :class:`requests.Session` instance that has been configured
-    according to the given parameters.
+def get_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
+    """Get a callable that returns :class:`requests.Session` instances that have
+    been configured according to the given parameters.
 
     :param bool verify: Should SSL certificates by verified when connecting
         over HTTPS? Default is ``True``. If you have chosen not to verify certificates
@@ -51,18 +44,23 @@ def get_transport(verify=True, ssl_version=DEFAULT_SSL_VERSION):
         :mod:`ssl` module (PROTOCOL_XXX). Default is TLSv1. If you don't wish to
         use a specific version and instead rely on the default for the requests /
         urllib3 module, pass ``ssl_version=None``.
-    :return: Configured session instance for making HTTP(S) requests
-    :rtype: requests.Session
+    :return: A callable to return new configured session instances for making HTTP(S)
+        requests
+    :rtype: func
     """
-    transport = requests.Session()
 
-    if not verify:
-        warnings.filterwarnings("ignore", category=InsecureRequestWarning)
-        transport.verify = False
+    def factory():
+        transport = requests.Session()
 
-    if ssl_version is not None:
-        transport.mount('https://', VersionedSSLAdapter(ssl_version))
-    return transport
+        if not verify:
+            warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+            transport.verify = False
+
+        if ssl_version is not None:
+            transport.mount('https://', VersionedSSLAdapter(ssl_version))
+        return transport
+
+    return factory
 
 
 class VersionedSSLAdapter(HTTPAdapter):
