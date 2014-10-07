@@ -38,26 +38,69 @@ class WarthogCommandFactory(object):
         self._transport_factory = transport_factory
 
     def get_session_start(self, scheme_host, username, password):
+        """Get a new command instance to start a session.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring username: Name of the user to authenticate with.
+        :param basestring password: Password for the user to authenticate with.
+        :return: A new command to start a session.
+        :rtype: warthog.core.SessionStartCommand
+        """
         return warthog.core.SessionStartCommand(
             self._transport_factory(), scheme_host, username, password)
 
     def get_session_end(self, scheme_host, session_id):
+        """Get a new command instance to close an existing session.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring session_id: Previously authenticated session ID.
+        :return: A new command to close a session.
+        :rtype: warthog.core.SessionEndCommand
+        """
         return warthog.core.SessionEndCommand(
             self._transport_factory(), scheme_host, session_id)
 
     def get_server_status(self, scheme_host, session_id):
+        """Get a new command to get the status (enabled / disabled) of a server.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring session_id: Previously authenticated session ID.
+        :return: A new command to get the status of a server.
+        :rtype: warthog.core.NodeStatusCommand
+        """
         return warthog.core.NodeStatusCommand(
             self._transport_factory(), scheme_host, session_id)
 
     def get_enable_server(self, scheme_host, session_id):
+        """Get a new command to enable a server at the node level.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring session_id: Previously authenticated session ID.
+        :return: A new command to enable a server.
+        :rtype: warthog.core.NodeEnableCommand
+        """
         return warthog.core.NodeEnableCommand(
             self._transport_factory(), scheme_host, session_id)
 
     def get_disable_server(self, scheme_host, session_id):
+        """Get a new command to disable a server at the node level.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring session_id: Previously authenticated session ID.
+        :return: A new command to disable a server.
+        :rtype: warthog.core.NodeDisableCommand
+        """
         return warthog.core.NodeDisableCommand(
             self._transport_factory(), scheme_host, session_id)
 
     def get_active_connections(self, scheme_host, session_id):
+        """Get a new command to get the number of active connections to a server.
+
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring session_id: Previously authenticated session ID.
+        :return: A new command to get active connections to a server.
+        :rtype: warthog.core.NodeActiveConnectionsCommand
+        """
         return warthog.core.NodeActiveConnectionsCommand(
             self._transport_factory(), scheme_host, session_id)
 
@@ -82,14 +125,14 @@ class _SessionContext(object):
     """
 
     def __init__(self, scheme_host, username, password, commands):
-        """
+        """Set the load balancer scheme/host/port combination, username, password, and
+        command factory to use for starting and ending sessions with the load balancer.
 
-
-
-        :param scheme_host:
-        :param username:
-        :param password:
-        :param commands:
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring username: Name of the user to authenticate with.
+        :param basestring password: Password for the user to authenticate with.
+        :param WarthogCommandFactory commands: Factory instance for creating new commands
+            for starting and ending sessions with the load balancer.
         """
         self._scheme_host = scheme_host
         self._username = username
@@ -98,11 +141,13 @@ class _SessionContext(object):
         self._session = None
 
     def __enter__(self):
-        """
+        """Establish a new session with the load balancer and return the generated
+        session ID when entering this context.
 
-
-
-        :return:
+        :return: Authenticated session ID
+        :rtype: unicode
+        :raises warthog.exceptions.WarthogAuthFailureError: If the authentication
+            failed for some reason.
         """
         start_cmd = self._commands.get_session_start(
             self._scheme_host, self._username, self._password)
@@ -110,9 +155,10 @@ class _SessionContext(object):
         return self._session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """
+        """End the current session, making sure not to suppress any exceptions generated
+        within the block we are exiting.
 
-        :return:
+        :return: False, always
         """
         end_cmd = self._commands.get_session_end(
             self._scheme_host, self._session)
@@ -144,16 +190,27 @@ class WarthogClient(object):
     _default_wait_interval = 2
 
     def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
-        """
+        """Set the load balancer scheme/host/port combination, username and password
+        to use for connecting and authenticating with the load balancer.
 
+        Optionally, the amount of time to wait between retries of various operations
+        and the factory used for creating commands may be set.
 
+        If the interval between retries is not supplied, the default is two seconds.
 
+        If the command factory is not supplied, a default instance will be used. The
+        command factory is also responsible for creating new :class:`requests.Session`
+        instances to be used by each command. The default configuration is to use
+        session instances that use TLSv1 for SSL connections and verify certificates.
 
-        :param scheme_host:
-        :param username:
-        :param password:
-        :param wait_interval:
-        :param commands:
+        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring username: Name of the user to authenticate with.
+        :param basestring password: Password for the user to authenticate with.
+        :param int wait_interval: How long (in seconds) to wait between each retry of
+            various operations (waiting for nodes to transition, waiting for connections
+            to close, etc.).
+        :param WarthogCommandFactory commands: Factory instance for creating new commands
+            for starting and ending sessions with the load balancer.
         """
         self._scheme_host = scheme_host
         self._username = username
@@ -172,40 +229,51 @@ class WarthogClient(object):
         """Get the current status of the given server, at the node level.
 
         The status will be one of the constants :data:`warthog.core.STATUS_ENABLED`
-        or :data:`warthog.core.STATUS_DISABLED`.
+        :data:`warthog.core.STATUS_DISABLED`, :data:`warthog.core.STATUS_DOWN`.
 
         :param basestring server: Hostname of the server to get the status of.
         :return: The current status of the server, enabled or disabled.
         :rtype: basestring
-        :raises warthog.exceptions.WarthogAuthFailureError:
-        :raises warthog.exceptions.WarthogNoSuchNodeError:
-        :raises warthog.exceptions.WarthogNodeStatusError:
+        :raises warthog.exceptions.WarthogAuthFailureError: If authentication with
+            the load balancer failed when trying to establish a new session for this
+            operation.
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the load balancer does
+            not recognize the given hostname.
+        :raises warthog.exceptions.WarthogNodeStatusError: If there are any other
+            problems getting the status of the given server.
         """
         with self._context() as session:
             cmd = self._commands.get_server_status(self._scheme_host, session)
             return cmd.send(server)
 
-    def disable_server(self, server, wait_for_connections=True, max_retries=5):
-        """
+    def disable_server(self, server, max_retries=5):
+        """Disable a server at the node level, optionally retrying when there are transient
+        errors and waiting for the number of active connections to the server to reach zero.
 
+        If ``max_retries`` is zero, no attempt will be made to retry on transient errors
+        or to wait until there are no active connections to the server, the method will
+        return immediately.
 
-
-        :param basestring server:
-        :param bool wait_for_connections:
-        :param int max_retries:
-        :return:
+        :param basestring server: Hostname of the server to disable
+        :param int max_retries: Max number of times to sleep and retry when encountering
+            some sort of transient error when disabling the server and while waiting for
+            the number of active connections to a server to reach zero.
+        :return: True if the server was disabled, false otherwise.
         :rtype: bool
-        :raises warthog.exceptions.WarthogAuthFailureError:
-        :raises warthog.exceptions.WarthogNoSuchNodeError:
-        :raises warthog.exceptions.WarthogNodeDisableError:
+        :raises warthog.exceptions.WarthogAuthFailureError: If authentication with
+            the load balancer failed when trying to establish a new session for this
+            operation.
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the load balancer does
+            not recognize the given hostname.
+        :raises warthog.exceptions.WarthogNodeDisableError: If there are any other
+            problems disabling the given server.
         """
         with self._context() as session:
             disable = self._commands.get_disable_server(self._scheme_host, session)
-            disable.send(server)
+            self._try_repeatedly(lambda: disable.send(server), max_retries)
 
-            if wait_for_connections:
-                active = self._commands.get_active_connections(self._scheme_host, session)
-                self._wait_for_connections(active, server, max_retries)
+            active = self._commands.get_active_connections(self._scheme_host, session)
+            self._wait_for_connections(active, server, max_retries)
 
             status = self._commands.get_server_status(self._scheme_host, session)
             return warthog.core.STATUS_DISABLED == status.send(server)
@@ -224,24 +292,46 @@ class WarthogClient(object):
             retries += 1
 
     def enable_server(self, server, max_retries=5):
-        """
+        """Enable a server at the node level, optionally retrying when there are transient
+        errors and waiting for the server to enter the expected, enabled state.
 
+        If ``max_retries`` is zero, no attempt will be made to retry on transient errors
+        or to wait until the server enters the expected, enabled state.
 
-
-        :param server:
-        :param max_retries:
-        :return:
+        :param basestring server: Hostname of the server to enable
+        :param int max_retries: Max number of times to sleep and retry when encountering
+            some transient error while trying to enable the server
+        :return: True if the server was enabled, false otherwise
         :rtype: bool
-        :raises warthog.exceptions.WarthogAuthFailureError:
-        :raises warthog.exceptions.WarthogNoSuchNodeError:
-        :raises warthog.exceptions.WarthogNodeEnableError:
+        :raises warthog.exceptions.WarthogAuthFailureError: If authentication with
+            the load balancer failed when trying to establish a new session for this
+            operation.
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the load balancer does
+            not recognize the given hostname.
+        :raises warthog.exceptions.WarthogNodeEnableError: If there are any other
+            problems enabling the given server.
         """
         with self._context() as session:
-            cmd = self._commands.get_enable_server(self._scheme_host, session)
-            method = lambda: cmd.send(server)
+            enable = self._commands.get_enable_server(self._scheme_host, session)
+            self._try_repeatedly(lambda: enable.send(server), max_retries)
 
-            # This function will only run the method once if max_retries is zero
-            return self._try_repeatedly(method, max_retries)
+            status = self._commands.get_server_status(self._scheme_host, session)
+            self._wait_for_enable(status, server, max_retries)
+
+            return warthog.core.STATUS_ENABLED == status.send(server)
+
+    def _wait_for_enable(self, cmd, server, max_retries):
+        retries = 0
+
+        while retries < max_retries:
+            status = cmd.send(server)
+            if status == warthog.core.STATUS_ENABLED:
+                break
+
+            self._logger.debug(
+                "Server is not yet enabled (%s), sleeping for %s seconds...", status, self._interval)
+            time.sleep(self._interval)
+            retries += 1
 
     def _try_repeatedly(self, method, max_retries):
         """Execute a method, retrying if it fails due to a transient error

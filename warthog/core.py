@@ -24,6 +24,8 @@ STATUS_ENABLED = 'enabled'
 
 STATUS_DISABLED = 'disabled'
 
+STATUS_DOWN = 'down'
+
 ERROR_CODE_GRACEFUL_SHUTDOWN = 67174416
 
 ERROR_CODE_INVALID_SESSION = 1009
@@ -255,14 +257,15 @@ class NodeDisableCommand(_AuthenticatedCommand):
 
 
 class NodeStatusCommand(_AuthenticatedCommand):
-    """Command to get the current status ('enabled', 'disabled') of a particular server.
+    """Command to get the current status ('enabled', 'disabled', 'down') of a particular
+    server.
 
     This class is thread safe.
     """
 
     def send(self, server):
         """Get the current status of the given server at the node level and return
-        one of the `STATUS_ENABLED` or `STATUS_DISABLED` constants.
+        one of the `STATUS_ENABLED`, `STATUS_DISABLED`, `STATUS_DOWN` constants.
 
         :return: The status of the server as a constant string
         :rtype: basestring
@@ -293,6 +296,8 @@ class NodeStatusCommand(_AuthenticatedCommand):
             return STATUS_DISABLED
         if status == 1:
             return STATUS_ENABLED
+        if status == 2:
+            return STATUS_DOWN
 
         raise warthog.exceptions.WarthogNodeStatusError(
             'Unknown status of {0}: status={1}'.format(server, status))
