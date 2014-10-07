@@ -1,0 +1,17 @@
+language: python
+env:
+  - TOXENV=py26
+  - TOXENV=py27
+  - TOXENV=py33
+  - TOXENV=py34
+  - TOXENV=pypy
+
+branches:
+  only:
+    - master
+
+
+install:
+  - "pip install tox"
+
+script: tox test

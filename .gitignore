@@ -12,4 +12,4 @@ dist
 pylint.out
 coverage.xml
 nosetests.xml
-local-settings.py
+.tox
