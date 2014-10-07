@@ -278,6 +278,10 @@ class WarthogClient(object):
             status = self._commands.get_server_status(self._scheme_host, session)
             return warthog.core.STATUS_DISABLED == status.send(server)
 
+    # NOTE: there's a fair amount of duplicate code between this method and _wait_for_status
+    # and we could consolidate them to one method that just accepts a function and waits for
+    # it to return true and then break. But, this way we have more useful debug information
+    # logged at the expense of duplicate code.
     def _wait_for_connections(self, cmd, server, max_retries):
         retries = 0
 
@@ -351,5 +355,3 @@ class WarthogClient(object):
                     "Encountered transient error %s - %s, retrying... ", e.api_code, e.api_msg)
                 time.sleep(self._interval)
                 retries += 1
-
-
