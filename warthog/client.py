@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Warthog - Client for A10 load balancers
+# Warthog - Simple client for A10 load balancers
 #
 # Copyright 2014 Smarter Travel
 #
@@ -11,8 +11,7 @@
 warthog.client
 ~~~~~~~~~~~~~~
 
-
-
+Simple interface for a load balancer with retry logic and intelligent draining of nodes.
 """
 
 from __future__ import print_function, division
@@ -26,6 +25,8 @@ import warthog.transport
 class WarthogCommandFactory(object):
     """Factory for getting new :mod:`warthog.core` command instances that each
     perform some type of request against the load balancer API.
+
+    This class is thread safe.
     """
 
     def __init__(self, transport_factory):
@@ -229,10 +230,10 @@ class WarthogClient(object):
         """Get the current status of the given server, at the node level.
 
         The status will be one of the constants :data:`warthog.core.STATUS_ENABLED`
-        :data:`warthog.core.STATUS_DISABLED`, :data:`warthog.core.STATUS_DOWN`.
+        :data:`warthog.core.STATUS_DISABLED`, or :data:`warthog.core.STATUS_DOWN`.
 
         :param basestring server: Hostname of the server to get the status of.
-        :return: The current status of the server, enabled or disabled.
+        :return: The current status of the server, enabled, disabled, or down.
         :rtype: basestring
         :raises warthog.exceptions.WarthogAuthFailureError: If authentication with
             the load balancer failed when trying to establish a new session for this

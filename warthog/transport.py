@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Warthog - Client for A10 load balancers
+# Warthog - Simple client for A10 load balancers
 #
 # Copyright 2014 Smarter Travel
 #
@@ -10,6 +10,8 @@
 """
 warthog.transport
 ~~~~~~~~~~~~~~~~~
+
+Configure the way we'll interact with the load balancer API over HTTP or HTTPS.
 """
 
 from __future__ import print_function, division

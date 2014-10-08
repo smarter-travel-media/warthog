@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Warthog - Client for A10 load balancers
+# Warthog - Simple client for A10 load balancers
 #
 # Copyright 2014 Smarter Travel
 #
@@ -17,6 +17,7 @@ Basic building blocks for authentication and interaction with a load balancer.
 import logging
 
 import warthog.exceptions
+# Your IDE may think this import is bogus, it's not.
 from .six.moves.urllib import parse
 
 
