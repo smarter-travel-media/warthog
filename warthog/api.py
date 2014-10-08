@@ -25,10 +25,16 @@ from .core import (
     STATUS_DOWN,
     STATUS_ENABLED)
 
-from .client import WarthogClient, WarthogCommandFactory
+from .client import (
+    CommandFactory,
+    WarthogClient)
+
+from .transport import get_transport_factory
 
 
 __all__ = [
+    'get_transport_factory',
+    'CommandFactory',
     'NodeActiveConnectionsCommand',
     'NodeDisableCommand',
     'NodeEnableCommand',
@@ -36,7 +42,6 @@ __all__ = [
     'SessionEndCommand',
     'SessionStartCommand',
     'WarthogClient',
-    'WarthogCommandFactory',
     'STATUS_DISABLED',
     'STATUS_DOWN',
     'STATUS_ENABLED'

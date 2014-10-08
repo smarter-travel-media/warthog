@@ -22,9 +22,13 @@ import warthog.exceptions
 import warthog.transport
 
 
-class WarthogCommandFactory(object):
+class CommandFactory(object):
     """Factory for getting new :mod:`warthog.core` command instances that each
     perform some type of request against the load balancer API.
+
+    It is typically not required for user code to instantiate this class directly
+    unless you have special requirements and need to inject a custom ``transport_factory``
+    method.
 
     This class is thread safe.
     """
@@ -107,17 +111,17 @@ class WarthogCommandFactory(object):
 
 
 def _get_default_cmd_factory():
-    """Get a :class:`WarthogCommandFactory` instance configured to use the
-    TLS version expected by the A10 when using https connections.
+    """Get a :class:`CommandFactory` instance configured to use the TLS version
+    expected by the A10 when using https connections.
 
     :return: Default command factory for building new commands to interact
         with the A10 load balancer
     :rtype: WarthogCommandFactory
     """
-    return WarthogCommandFactory(warthog.transport.get_factory())
+    return CommandFactory(warthog.transport.get_transport_factory())
 
 
-class _SessionContext(object):
+class SessionContext(object):
     """Context manager implementation that begins a new authenticated session
     with the load balancer when entering the context and cleans it up after
     exiting the context.
@@ -132,7 +136,7 @@ class _SessionContext(object):
         :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
         :param basestring username: Name of the user to authenticate with.
         :param basestring password: Password for the user to authenticate with.
-        :param WarthogCommandFactory commands: Factory instance for creating new commands
+        :param CommandFactory commands: Factory instance for creating new commands
             for starting and ending sessions with the load balancer.
         """
         self._scheme_host = scheme_host
@@ -210,8 +214,8 @@ class WarthogClient(object):
         :param int wait_interval: How long (in seconds) to wait between each retry of
             various operations (waiting for nodes to transition, waiting for connections
             to close, etc.).
-        :param WarthogCommandFactory commands: Factory instance for creating new commands
-            for starting and ending sessions with the load balancer.
+        :param CommandFactory commands: Factory instance for creating new commands for
+            starting and ending sessions with the load balancer.
         """
         self._scheme_host = scheme_host
         self._username = username
@@ -223,7 +227,7 @@ class WarthogClient(object):
         """Get a new :class:`_SessionContext` instance."""
         self._logger.debug('Creating new session context for %s', self._scheme_host)
 
-        return _SessionContext(
+        return SessionContext(
             self._scheme_host, self._username, self._password, self._commands)
 
     def get_status(self, server):

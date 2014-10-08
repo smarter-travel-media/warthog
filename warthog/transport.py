@@ -34,9 +34,16 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
 
-def get_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
+def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
     """Get a callable that returns :class:`requests.Session` instances that have
     been configured according to the given parameters.
+
+    :class:`requests.Session` instances are then used for interacting with the API
+    of the load balancer over HTTP or HTTPS.
+
+    It is typically not required for user code to call this function directly unless
+    you have special requirements such as needing to bypass HTTPS certificate validation
+    because you use a self signed certificate.
 
     :param bool verify: Should SSL certificates by verified when connecting
         over HTTPS? Default is ``True``. If you have chosen not to verify certificates
