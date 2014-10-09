@@ -78,7 +78,7 @@ class VersionedSSLAdapter(HTTPAdapter):
     def __init__(self, ssl_version, pool_connections=DEFAULT_POOLSIZE,
                  pool_maxsize=DEFAULT_POOLSIZE, max_retries=DEFAULT_RETRIES,
                  pool_block=DEFAULT_POOLBLOCK):
-        self._ssl_version = ssl_version
+        self.ssl_version = ssl_version
 
         super(VersionedSSLAdapter, self).__init__(
             pool_connections=pool_connections,
@@ -89,4 +89,4 @@ class VersionedSSLAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         self.poolmanager = PoolManager(
             num_pools=connections, maxsize=maxsize, block=block,
-            ssl_version=self._ssl_version, **pool_kwargs)
+            ssl_version=self.ssl_version, **pool_kwargs)
