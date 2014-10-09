@@ -136,6 +136,21 @@ class TestWarthogClient(object):
         assert disabled, 'Server did not end up disabled'
         assert end_cmd.send.called, 'Session end .send() did not get called'
 
+    def test_disable_server_never_gets_disabled(self, commands, start_cmd, end_cmd,
+                                                status_cmd, conn_cmd, disable_cmd):
+        start_cmd.send.return_value = '1234'
+        disable_cmd.send.return_value = True
+        conn_cmd.send.return_value = 42
+        status_cmd.send.return_value = 'enabled'
+
+        client = warthog.client.WarthogClient(
+            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+
+        disabled = client.disable_server('app1.example.com')
+
+        assert not disabled, 'Server ended up disabled'
+        assert end_cmd.send.called, 'Session end .send() did not get called'
+
     def test_enable_server_in_graceful_shutdown(self, commands, start_cmd, end_cmd,
                                                 status_cmd, enable_cmd):
         graceful_error = warthog.exceptions.WarthogNodeEnableError(
