@@ -8,6 +8,7 @@
 #
 
 
+import codecs
 from setuptools import find_packages, setup
 import warthog
 
@@ -34,11 +35,15 @@ REQUIREMENTS = [
     'requests'
 ]
 
+with codecs.open('README.rst', 'r', 'utf-8') as handle:
+    LONG_DESCRIPTION = handle.read()
+
 setup(
     name='warthog',
     version=warthog.__version__,
     author=AUTHOR,
     description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
     author_email=EMAIL,
     classifiers=CLASSIFIERS,
     license=LICENSE,
