@@ -192,7 +192,7 @@ class WarthogClient(object):
     This class is thread safe.
     """
     _logger = warthog.core.get_log()
-    _default_wait_interval = 2
+    _default_wait_interval = 2.0
 
     def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
         """Set the load balancer scheme/host/port combination, username and password
@@ -211,7 +211,7 @@ class WarthogClient(object):
         :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
         :param basestring username: Name of the user to authenticate with.
         :param basestring password: Password for the user to authenticate with.
-        :param int wait_interval: How long (in seconds) to wait between each retry of
+        :param float wait_interval: How long (in seconds) to wait between each retry of
             various operations (waiting for nodes to transition, waiting for connections
             to close, etc.).
         :param CommandFactory commands: Factory instance for creating new commands for
