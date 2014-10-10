@@ -36,7 +36,7 @@ To install Warthog, simply run:
 Usage
 -----
 
-Usage is simple!
+Using the client is easy!
 
 .. code-block:: python
 
@@ -55,6 +55,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   design
    usage
    api
    changes
