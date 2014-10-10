@@ -210,7 +210,7 @@ class WarthogClient(object):
         self._interval = wait_interval
         self._commands = commands if commands is not None else _get_default_cmd_factory()
 
-    def _context(self):
+    def _session_context(self):
         """Get a new :class:`_SessionContext` instance."""
         self._logger.debug('Creating new session context for %s', self._scheme_host)
 
@@ -234,7 +234,7 @@ class WarthogClient(object):
         :raises warthog.exceptions.WarthogNodeStatusError: If there are any other
             problems getting the status of the given server.
         """
-        with self._context() as session:
+        with self._session_context() as session:
             cmd = self._commands.get_server_status(self._scheme_host, session)
             return cmd.send(server)
 
@@ -260,7 +260,7 @@ class WarthogClient(object):
         :raises warthog.exceptions.WarthogNodeDisableError: If there are any other
             problems disabling the given server.
         """
-        with self._context() as session:
+        with self._session_context() as session:
             disable = self._commands.get_disable_server(self._scheme_host, session)
             self._try_repeatedly(lambda: disable.send(server), max_retries)
 
@@ -308,7 +308,7 @@ class WarthogClient(object):
         :raises warthog.exceptions.WarthogNodeEnableError: If there are any other
             problems enabling the given server.
         """
-        with self._context() as session:
+        with self._session_context() as session:
             enable = self._commands.get_enable_server(self._scheme_host, session)
             self._try_repeatedly(lambda: enable.send(server), max_retries)
 
