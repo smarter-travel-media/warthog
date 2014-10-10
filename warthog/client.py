@@ -16,6 +16,7 @@ Simple interface for a load balancer with retry logic and intelligent draining o
 
 from __future__ import print_function, division
 import time
+import contextlib
 
 import warthog.core
 import warthog.exceptions
@@ -121,55 +122,56 @@ def _get_default_cmd_factory():
     return CommandFactory(warthog.transport.get_transport_factory())
 
 
-class SessionContext(object):
-    """Context manager implementation that begins a new authenticated session
-    with the load balancer when entering the context and cleans it up after
-    exiting the context.
+@contextlib.contextmanager
+def session_context(scheme_host, username, password, commands):
+    """Context manager that makes a request to start an authenticated session, yields the
+    session ID, and then closes the session afterwards.
 
-    This class is not thread safe.
+    :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+    :param basestring username: Name of the user to authenticate with.
+    :param basestring password: Password for the user to authenticate with.
+    :param CommandFactory commands: Factory instance for creating new commands
+        for starting and ending sessions with the load balancer.
+    :return: The session ID of the newly established session.
     """
+    session = None
+    try:
+        start_cmd = commands.get_session_start(scheme_host, username, password)
+        session = start_cmd.send()
 
-    def __init__(self, scheme_host, username, password, commands):
-        """Set the load balancer scheme/host/port combination, username, password, and
-        command factory to use for starting and ending sessions with the load balancer.
+        yield session
+    finally:
+        if session is not None:
+            end_cmd = commands.get_session_end(scheme_host, session)
+            end_cmd.send()
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
-        :param basestring username: Name of the user to authenticate with.
-        :param basestring password: Password for the user to authenticate with.
-        :param CommandFactory commands: Factory instance for creating new commands
-            for starting and ending sessions with the load balancer.
-        """
-        self._scheme_host = scheme_host
-        self._username = username
-        self._password = password
-        self._commands = commands
-        self._session = None
 
-    def __enter__(self):
-        """Establish a new session with the load balancer and return the generated
-        session ID when entering this context.
+@contextlib.contextmanager
+def disabled_node_context(client, server, logger):
+    """Context manager that disables a server, yields, and then enables the server
+    again if it was initially enabled. If the server was disabled before we started
+    operating on it, it will be left disabled.
 
-        :return: Authenticated session ID
-        :rtype: unicode
-        :raises warthog.exceptions.WarthogAuthFailureError: If the authentication
-            failed for some reason.
-        """
-        start_cmd = self._commands.get_session_start(
-            self._scheme_host, self._username, self._password)
-        self._session = start_cmd.send()
-        return self._session
+    :param WarthogClient client: Client to use for manipulating the server
+    :param basestring server: Hostname of the server to disable and enable
+    :param logging.Logger logger: Logger instance to use
+    """
+    status = client.get_status(server)
+    is_in_lb = (status == warthog.core.STATUS_ENABLED)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """End the current session, making sure not to suppress any exceptions generated
-        within the block we are exiting.
+    if is_in_lb:
+        client.disable_server(server)
+    else:
+        logger.debug(
+            'Server %s was not in load balancer (%s), not disabling...', server, status)
 
-        :return: False, always
-        """
-        end_cmd = self._commands.get_session_end(
-            self._scheme_host, self._session)
-        end_cmd.send()
-        self._session = None
-        return False
+    yield
+
+    if is_in_lb:
+        client.enable_server(server)
+    else:
+        logger.debug(
+            'Server %s was not in load balancer (%s), not enabling...', server, status)
 
 
 class WarthogClient(object):
@@ -211,11 +213,35 @@ class WarthogClient(object):
         self._commands = commands if commands is not None else _get_default_cmd_factory()
 
     def _session_context(self):
-        """Get a new :class:`_SessionContext` instance."""
+        """Get a new context manager that starts and ends a session with the load balancer."""
         self._logger.debug('Creating new session context for %s', self._scheme_host)
+        return session_context(self._scheme_host, self._username, self._password, self._commands)
 
-        return SessionContext(
-            self._scheme_host, self._username, self._password, self._commands)
+    def disabled_context(self, server):
+        """Return a context manager that will disable the given server, yield, and then
+        enable the server. Note that the context manager will not re-enable the server
+        afterwards if the server was initially disabled.
+
+        Typical usage would look like this.
+
+        .. code-block:: python
+
+            with client.disabled_context('app1.example.com'):
+                install_my_app_or_something()
+
+        This is an equivalent and more concise way to do something like the following.
+
+        .. code-block:: python
+
+            client.disable_server('app1.example.com')
+            install_my_app_or_something()
+            client.enable_server('app1.example.com')
+
+        :param basestring server: Hostname of the server to disable and enable
+        :return: Context manager for disabling and enabling a server
+        """
+        self._logger.debug('Creating new disabled node context for %s', server)
+        return disabled_node_context(self, server, self._logger)
 
     def get_status(self, server):
         """Get the current status of the given server, at the node level.
