@@ -174,20 +174,7 @@ class SessionContext(object):
 
 class WarthogClient(object):
     """Client for interacting with an A10 load balancer to get the status
-    of nodes managed by it, enable them at the node level, and disable them
-    at the node level.
-
-    Note that all methods in this client that operate on servers work at the
-    node level. That is, servers are disabled for all groups they are in or
-    potentially enabled for all groups they are in. It may still be possible
-    for a node to be disabled in some group but enabled at the node level.
-    This client does not handle that case and assumes that it is the only
-    mechanism being used to operate on nodes.
-
-    In practice this should not be an issue since the primary use case of this
-    client is to safely remove a node from the load balancer so that it may be
-    deployed to. If a node remains disabled for some group after being enabled
-    at the node level, so be it.
+    of nodes managed by it, enable them, and disable them.
 
     This class is thread safe.
     """
@@ -257,7 +244,7 @@ class WarthogClient(object):
 
         If ``max_retries`` is zero, no attempt will be made to retry on transient errors
         or to wait until there are no active connections to the server, the method will
-        return immediately.
+        try a single time to disable the server and then return immediately.
 
         :param basestring server: Hostname of the server to disable
         :param int max_retries: Max number of times to sleep and retry when encountering
@@ -306,7 +293,7 @@ class WarthogClient(object):
 
         If ``max_retries`` is zero, no attempt will be made to retry on transient errors
         or to wait until the server enters the expected, enabled state, the method will
-        return immediately.
+        try a single time to enable the server then return immediately.
 
         :param basestring server: Hostname of the server to enable
         :param int max_retries: Max number of times to sleep and retry when encountering
