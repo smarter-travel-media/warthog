@@ -17,7 +17,9 @@ Basic building blocks for authentication and interaction with a load balancer.
 import logging
 
 import warthog.exceptions
-# Your IDE may think this import is bogus, it's not.
+# Your IDE may think this import is bogus, it's not. It's just magic
+# lazy loading of modules that were moved between Python 2 and Python 3
+# that the six lib handles the importing of.
 from .six.moves.urllib import parse
 
 
@@ -99,9 +101,9 @@ class SessionStartCommand(object):
         params['password'] = self._password
 
         self._logger.debug('Making session start request to %s', url)
-        r = self._transport.get(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.get(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if 'session_id' not in json:
             raise _get_exception_for_response(
@@ -165,9 +167,9 @@ class SessionEndCommand(_AuthenticatedCommand):
         params = _get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
 
         self._logger.debug('Making session close request to %s', url)
-        r = self._transport.post(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.post(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if json['response']['status'] == 'fail':
             raise _get_exception_for_response(
@@ -205,9 +207,9 @@ class NodeEnableCommand(_AuthenticatedCommand):
         params['status'] = 1
 
         self._logger.debug('Making node enable request for %s', server)
-        r = self._transport.post(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.post(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if json['response']['status'] == 'fail':
             raise _get_exception_for_response(
@@ -244,9 +246,9 @@ class NodeDisableCommand(_AuthenticatedCommand):
         params['status'] = 0
 
         self._logger.debug('Making node disable request for %s', server)
-        r = self._transport.post(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.post(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if json['response']['status'] == 'fail':
             raise _get_exception_for_response(
@@ -282,9 +284,9 @@ class NodeStatusCommand(_AuthenticatedCommand):
         params['name'] = server
 
         self._logger.debug('Making node status request for %s', server)
-        r = self._transport.get(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.get(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if 'server_stat' not in json:
             raise _get_exception_for_response(
@@ -327,9 +329,9 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         params['name'] = server
 
         self._logger.debug('Making active connection count request for %s', server)
-        r = self._transport.get(url, params=params)
-        self._logger.debug(r.text)
-        json = r.json()
+        response = self._transport.get(url, params=params)
+        self._logger.debug(response.text)
+        json = response.json()
 
         if 'server_stat' not in json:
             raise _get_exception_for_response(
