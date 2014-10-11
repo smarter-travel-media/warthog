@@ -25,11 +25,13 @@ def docs():
 @task
 def push():
     local('git push origin')
+    local('git push github')
 
 
 @task
 def push_tags():
     local('git push --tags origin')
+    local('git push --tags github')
 
 
 @task
