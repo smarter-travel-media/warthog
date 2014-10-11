@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Warthog - Client for A10 load balancers
+# Warthog - Simple client for A10 load balancers
 #
 # Copyright 2014 Smarter Travel
 #
