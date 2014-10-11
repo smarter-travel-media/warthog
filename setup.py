@@ -13,7 +13,7 @@ from setuptools import find_packages, setup
 import warthog
 
 
-AUTHOR = 'Smarter Travel',
+AUTHOR = 'Smarter Travel'
 EMAIL = ''
 DESCRIPTION = 'Simple client for A10 load balancers'
 URL = 'https://warthog.readthedocs.org/'
