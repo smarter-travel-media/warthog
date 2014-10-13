@@ -1,14 +1,26 @@
 Design
 ======
 
-.. TODO: Purpose: deploy only
+Purpose
+-------
 
-.. TODO: Node level operations vs group level
 
-.. TODO: Thread safety?
+Node Level vs Group Level
+-------------------------
 
-.. TODO: SSL?
 
-.. TODO: Official client vs ... this one? requests?
+Thread Safety
+-------------
 
-.. TODO: API module vs core, transport, exceptions
+
+SSL
+---
+
+
+Alternatives
+------------
+
+
+API Namespace
+-------------
+
