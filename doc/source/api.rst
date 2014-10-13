@@ -6,9 +6,8 @@ module. This is done for the purposes of clearly identifying which parts of
 the library are public and which parts are internal.
 
 Functionality in the :mod:`warthog.core`, :mod:`warthog.client`, and
-:mod:`warthog.transport` modules are included in this module as a single, flat
-namespace. This allows a simple and consistent way to interact with the
-library.
+:mod:`warthog.transport` modules is included in this module under a single, flat
+namespace. This allows a simple and consistent way to interact with the library.
 
 Exceptions from the :mod:`warthog.exceptions` module are intentionally not
 included in the :mod:`warthog.api` module. If you wish to handle exceptions
