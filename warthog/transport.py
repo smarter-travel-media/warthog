@@ -11,7 +11,7 @@
 warthog.transport
 ~~~~~~~~~~~~~~~~~
 
-Configure the way we'll interact with the load balancer API over HTTP or HTTPS.
+Methods to configure how to interact with the load balancer API over HTTP or HTTPS.
 """
 
 from __future__ import print_function, division
@@ -35,8 +35,8 @@ DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
 
 def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
-    """Get a callable that returns :class:`requests.Session` instances that have
-    been configured according to the given parameters.
+    """Get a new callable that returns :class:`requests.Session` instances that
+    have been configured according to the given parameters.
 
     :class:`requests.Session` instances are then used for interacting with the API
     of the load balancer over HTTP or HTTPS.
