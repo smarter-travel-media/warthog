@@ -55,7 +55,7 @@ def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
         urllib3 module, pass ``ssl_version=None``.
     :return: A callable to return new configured session instances for making HTTP(S)
         requests
-    :rtype: func
+    :rtype: callable
     """
 
     def factory():

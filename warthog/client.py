@@ -38,7 +38,7 @@ class CommandFactory(object):
         """Set the a factory that will create new HTTP Sessions instances to be
         used for executing commands.
 
-        :param func transport_factory: Callable for creating new Session instances
+        :param callable transport_factory: Callable for creating new Session instances
             for executing commands.
         """
         self._transport_factory = transport_factory
