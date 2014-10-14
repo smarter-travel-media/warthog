@@ -7,10 +7,6 @@ Warthog is a simple Python client for interacting with A10 load balancers. The t
 use case is for safely removing servers from pools in a load balancer during a deployment.
 It is available under the MIT license.
 
-Since the target use case is only aimed at deployments, Warthog supports far fewer types
-of operations than something like the `official <https://github.com/a10networks/acos-client>`_
-client.
-
 Features
 --------
 * Waiting for servers to finish all requests when being disabled
