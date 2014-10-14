@@ -36,5 +36,4 @@ def push_tags():
 
 @task
 def pypi():
-    # local('python setup.py register sdist upload')
-    pass
+    local('python setup.py register sdist upload')
