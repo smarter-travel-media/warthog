@@ -88,7 +88,7 @@ class TestSessionStartCommand(object):
             cmd = warthog.core.SessionStartCommand(transport, SCHEME_HOST, 'user', 'bad password')
             cmd.send()
 
-        assert transport.get.called, 'Expected transport ".get()" to be called'
+        assert transport.post.called, 'Expected transport ".get()" to be called'
 
     def test_send_success(self, transport, response):
         response.text = ''

@@ -100,8 +100,8 @@ class SessionStartCommand(object):
         params['username'] = self._username
         params['password'] = self._password
 
-        self._logger.debug('Making session start request to %s', url)
-        response = self._transport.get(url, params=params)
+        self._logger.debug('Making session start POST request to %s', url)
+        response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
 
@@ -166,7 +166,7 @@ class SessionEndCommand(_AuthenticatedCommand):
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
 
-        self._logger.debug('Making session close request to %s', url)
+        self._logger.debug('Making session close POST request to %s', url)
         response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -206,7 +206,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         params['server'] = server
         params['status'] = 1
 
-        self._logger.debug('Making node enable request for %s', server)
+        self._logger.debug('Making node enable POST request for %s', server)
         response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -245,7 +245,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         params['server'] = server
         params['status'] = 0
 
-        self._logger.debug('Making node disable request for %s', server)
+        self._logger.debug('Making node disable POST request for %s', server)
         response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -283,7 +283,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
         params = _get_base_query_params(_ACTION_STATUS, self._session_id)
         params['name'] = server
 
-        self._logger.debug('Making node status request for %s', server)
+        self._logger.debug('Making node status GET request for %s', server)
         response = self._transport.get(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -328,7 +328,7 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         params = _get_base_query_params(_ACTION_STATISTICS, self._session_id)
         params['name'] = server
 
-        self._logger.debug('Making active connection count request for %s', server)
+        self._logger.debug('Making active connection count GET request for %s', server)
         response = self._transport.get(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
