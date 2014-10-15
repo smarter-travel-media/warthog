@@ -1,6 +1,9 @@
 Warthog
 =======
 
+.. image:: https://travis-ci.org/smarter-travel-media/warthog.png?branch=master
+    :target: https://travis-ci.org/smarter-travel-media/warthog
+
 **WARNING** - This is pre-alpha software and subject to breaking changes and/or bugs.
 
 Warthog is a simple Python client for interacting with A10 load balancers. The target
