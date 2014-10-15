@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+0.3.0 - Future Release
+----------------------
+* Add :doc:`install` documentation.
 
 0.2.0 - 2014-10-14
 ------------------
