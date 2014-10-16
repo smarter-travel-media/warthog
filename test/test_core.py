@@ -128,7 +128,8 @@ class TestSessionEndCommand(object):
         response.json.return_value = dict(OK_RESPONSE)
 
         cmd = warthog.core.SessionEndCommand(transport, SCHEME_HOST, '1234')
-        assert cmd.send(), 'Did not get expected True result from session close'
+        closed = cmd.send()
+        assert closed, 'Did not get expected True result from session close'
         assert transport.post.called, 'Expected transport ".post() to be called'
 
 
@@ -158,7 +159,8 @@ class TestNodeEnableCommand(object):
         response.json.return_value = dict(OK_RESPONSE)
 
         cmd = warthog.core.NodeEnableCommand(transport, SCHEME_HOST, '1234')
-        assert cmd.send('good.example.com'), 'Did not get get expected True result from node enable'
+        got_enabled = cmd.send('good.example.com')
+        assert got_enabled, 'Did not get get expected True result from node enable'
         assert transport.post.called, 'Expected transport ".post() to be called'
 
 
@@ -188,7 +190,8 @@ class TestNodeDisableCommand(object):
         response.json.return_value = dict(OK_RESPONSE)
 
         cmd = warthog.core.NodeDisableCommand(transport, SCHEME_HOST, '1234')
-        assert cmd.send('good.example.com'), 'Did not get get expected True result from node disable'
+        got_disabled = cmd.send('good.example.com')
+        assert got_disabled, 'Did not get get expected True result from node disable'
         assert transport.post.called, 'Expected transport ".post() to be called'
 
 
@@ -218,7 +221,8 @@ class TestNodeStatusCommand(object):
         response.json.return_value = dict(NODE_STATUS)
 
         cmd = warthog.core.NodeStatusCommand(transport, SCHEME_HOST, '1234')
-        assert warthog.core.STATUS_ENABLED == cmd.send('good.example.com'), 'Did not get expected enabled status'
+        status = cmd.send('good.example.com')
+        assert warthog.core.STATUS_ENABLED == status, 'Did not get expected enabled status'
         assert transport.get.called, 'Expected transport ".get() to be called'
 
     def test_send_server_disabled(self, transport, response):
@@ -229,7 +233,8 @@ class TestNodeStatusCommand(object):
         response.json.return_value = payload
 
         cmd = warthog.core.NodeStatusCommand(transport, SCHEME_HOST, '1234')
-        assert warthog.core.STATUS_DISABLED == cmd.send('good.example.com'), 'Did not get expected disabled status'
+        status = cmd.send('good.example.com')
+        assert warthog.core.STATUS_DISABLED == status, 'Did not get expected disabled status'
         assert transport.get.called, 'Expected transport ".get() to be called'
 
     def test_send_server_down(self, transport, response):
@@ -240,7 +245,8 @@ class TestNodeStatusCommand(object):
         response.json.return_value = payload
 
         cmd = warthog.core.NodeStatusCommand(transport, SCHEME_HOST, '1234')
-        assert warthog.core.STATUS_DOWN == cmd.send('good.example.com'), 'Did not get expected down status'
+        status = cmd.send('good.example.com')
+        assert warthog.core.STATUS_DOWN == status, 'Did not get expected down status'
         assert transport.get.called, 'Expected transport ".get() to be called'
 
     def test_send_server_no_known_status(self, transport, response):
@@ -283,6 +289,7 @@ class TestNodeActiveConnectionsCommand(object):
         response.json.return_value = dict(NODE_STATUS)
 
         cmd = warthog.core.NodeActiveConnectionsCommand(transport, SCHEME_HOST, '1234')
-        assert 42 == cmd.send('good.example.com'), 'Did not get expected active connections'
+        connections = cmd.send('good.example.com')
+        assert 42 == connections, 'Did not get expected active connections'
         assert transport.get.called, 'Expected transport ".get() to be called'
 
