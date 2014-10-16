@@ -51,6 +51,11 @@ Using the client is easy!
 
 See `the docs <https://warthog.readthedocs.org/>`_ for more information.
 
+Code
+----
+
+The source code is available at https://github.com/smarter-travel-media/warthog
+
 Documentation
 -------------
 
