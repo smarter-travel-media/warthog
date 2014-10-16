@@ -16,7 +16,7 @@ import warthog
 AUTHOR = 'Smarter Travel'
 EMAIL = ''
 DESCRIPTION = 'Simple client for A10 load balancers'
-URL = 'https://warthog.readthedocs.org/'
+URL = 'https://github.com/smarter-travel-media/warthog'
 LICENSE = 'MIT'
 CLASSIFIERS = [
     "Development Status :: 2 - Pre-Alpha",
