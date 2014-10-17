@@ -9,7 +9,12 @@
 
 
 import codecs
-from setuptools import find_packages, setup
+
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
 import warthog
 
 
@@ -50,4 +55,4 @@ setup(
     url=URL,
     install_requires=REQUIREMENTS,
     zip_safe=True,
-    packages=find_packages())
+    packages=['warthog'])

@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.3.1 - 2014-10-17
+------------------
+* Change ``setup.py`` script to not require setuptools.
+
 0.3.0 - 2014-10-16
 ------------------
 * Add :doc:`install` documentation.
