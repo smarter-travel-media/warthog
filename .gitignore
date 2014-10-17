@@ -8,6 +8,7 @@ wheelhouse
 doc/build
 .#*
 dist
+build
 .coverage
 pylint.out
 coverage.xml
