@@ -3,11 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. NOTE: Make sure this page is kept up to date with README.rst
+
 Warthog
 =======
-
-.. image:: https://travis-ci.org/smarter-travel-media/warthog.png?branch=master
-    :target: https://travis-ci.org/smarter-travel-media/warthog
 
 **WARNING** - This is alpha software and subject to breaking changes and/or bugs.
 
