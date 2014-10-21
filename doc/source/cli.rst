@@ -170,7 +170,7 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
 Location
 ~~~~~~~~
 
-If the ``--config`` option is not given the the Warthog CLI client, several locations will
+If the ``--config`` option is not given to the Warthog CLI client, several locations will
 be checked for a configuration file to use. The logic for deciding which locations to check
 is described below. The locations will be checked in order until one that exists is found.
 
