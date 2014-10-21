@@ -16,7 +16,7 @@ def test_public_exports(exports):
 
 
 def test_all_exceptions_imported(exports):
-    errors = set([item for item in dir(warthog.exceptions) if item.endswith('Error')])
+    errors = set([item for item in dir(warthog.exceptions) if item.endswith('Error') or item.endswith('Warning')])
     intersection = errors.intersection(exports)
 
     assert intersection == errors, "All available errors should be in warthog.api"
