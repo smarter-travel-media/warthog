@@ -233,9 +233,14 @@ class WarthogClient(object):
 
         .. code-block:: python
 
-            client.disable_server('app1.example.com')
+            enabled = ('enabled' == client.get_status('app1.example.com'))
+            if enabled:
+                client.disable_server('app1.example.com')
+
             install_my_app_or_something()
-            client.enable_server('app1.example.com')
+
+            if enabled:
+                client.enable_server('app1.example.com')
 
         :param basestring server: Hostname of the server to disable and enable
         :return: Context manager for disabling and enabling a server
@@ -262,6 +267,30 @@ class WarthogClient(object):
         """
         with self._session_context() as session:
             cmd = self._commands.get_server_status(self._scheme_host, session)
+            return cmd.send(server)
+
+    def get_connections(self, server):
+        """Get the current number of active connections to a server, at the node level.
+
+        The number of connections will be 0 or a positive integer.
+
+        :param basestring server: Hostname of the server to get the number of active
+            connections for.
+        :return: The number of active connections total for the node, across all groups
+            the server is in.
+        :rtype: int
+        :raises warthog.exceptions.WarthogAuthFailureError: If authentication with
+            the load balancer failed when trying to establish a new session for this
+            operation.
+        :raises warthog.exceptions.WarthogNoSuchNodeError: If the load balancer does
+            not recognize the given hostname.
+        :raises warthog.exceptions.WarthogNodeStatusError: If there are any other
+            problems getting the active connections for the given server.
+
+        .. versionadded:: 0.4.0
+        """
+        with self._session_context() as session:
+            cmd = self._commands.get_active_connections(self._scheme_host, session)
             return cmd.send(server)
 
     def disable_server(self, server, max_retries=5):

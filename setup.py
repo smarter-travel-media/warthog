@@ -37,6 +37,7 @@ CLASSIFIERS = [
 ]
 
 REQUIREMENTS = [
+    'click',
     'requests'
 ]
 
@@ -55,4 +56,8 @@ setup(
     url=URL,
     install_requires=REQUIREMENTS,
     zip_safe=True,
-    packages=['warthog'])
+    packages=['warthog'],
+    entry_points="""
+        [console_scripts]
+        warthog=warthog.cli:main
+    """)

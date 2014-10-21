@@ -1,5 +1,5 @@
-API
-===
+Library
+=======
 
 The public API of the Warthog library is maintained in the :mod:`warthog.api`
 module. This is done for the purposes of clearly identifying which parts of
@@ -19,19 +19,16 @@ imported separately.
     :members: SessionStartCommand, SessionEndCommand, NodeActiveConnectionsCommand,
         NodeDisableCommand, NodeEnableCommand, NodeStatusCommand
     :undoc-members:
-    :show-inheritance:
 
 .. automodule:: warthog.client
     :special-members: __init__,__call__,__enter__,__exit__
     :members: CommandFactory, WarthogClient
     :undoc-members:
-    :show-inheritance:
 
 .. automodule:: warthog.transport
     :special-members: __init__,__call__,__enter__,__exit__
     :members: get_transport_factory
     :undoc-members:
-    :show-inheritance:
 
 .. automodule:: warthog.exceptions
     :special-members: __init__

@@ -61,7 +61,8 @@ Contents
    install
    design
    usage
-   api
+   lib
+   cli
    changes
 
 Indices and tables
