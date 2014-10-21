@@ -1,13 +1,13 @@
 Usage
 =====
 
-Some of the typical use cases for the Warthog client are detailed below.
+Some of the typical use cases for the Warthog library client are detailed below.
 
 Usage During Deploy
 -------------------
 
-In the example below, we use the Warthog client to disable each server in the load
-balancer, install a new version of our project on it, restart our application, and
+In the example below, we use the Warthog library client to disable each server in the
+load balancer, install a new version of our project on it, restart our application, and
 then enable the server in the load balancer.
 
 .. code-block:: python
@@ -49,8 +49,8 @@ then enable the server in the load balancer.
 Usage During Rolling Restart
 ----------------------------
 
-In the example below, we use the Warthog client to disable a server in the load
-balancer while an application is restarted and then wait for the application to
+In the example below, we use the Warthog library client to disable a server in the
+load balancer while an application is restarted and then wait for the application to
 become ready to serve requests.
 
 .. code-block:: python
@@ -90,8 +90,8 @@ become ready to serve requests.
 Usage as Context Manager
 ------------------------
 
-In this example, we use the Warthog client as a context manager that will
-automatically disable a server, and then re-enable it after the context
+In this example, we use the Warthog library client as a context manager that
+will automatically disable a server, and then re-enable it after the context
 exits.
 
 .. note::
@@ -139,7 +139,7 @@ Disable SSL Verification
 
 If you are interacting with the load balancer over HTTPS but using a self-signed certificate,
 you'll have to disable certification verification (or get proper cert!). This example will use
-the Warthog client with certification verification disabled.
+the Warthog library client with certification verification disabled.
 
 .. code-block:: python
 
