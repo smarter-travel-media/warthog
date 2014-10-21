@@ -14,7 +14,6 @@ warthog.client
 Simple interface for a load balancer with retry logic and intelligent draining of nodes.
 """
 
-from __future__ import print_function, division
 import time
 import contextlib
 

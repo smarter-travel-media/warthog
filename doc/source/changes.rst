@@ -6,6 +6,7 @@ Change Log
 * Add CLI tool for using the Warthog Client. See :doc:`cli`.
 * Add :meth:`warthog.client.WarthogClient.get_connections` method for getting the
   number of active connections to a server.
+* Add Exceptions in :mod:`warthog.exceptions` to the public api in :mod:`warthog.api`.
 
 0.3.1 - 2014-10-17
 ------------------

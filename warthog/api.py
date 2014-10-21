@@ -31,6 +31,17 @@ from .client import (
 
 from .transport import get_transport_factory
 
+from .exceptions import (
+    WarthogError,
+    WarthogAuthCloseError,
+    WarthogAuthFailureError,
+    WarthogInvalidSessionError,
+    WarthogNodeDisableError,
+    WarthogNodeEnableError,
+    WarthogNodeStatusError,
+    WarthogNoSuchNodeError
+)
+
 
 __all__ = [
     'get_transport_factory',
@@ -44,5 +55,13 @@ __all__ = [
     'WarthogClient',
     'STATUS_DISABLED',
     'STATUS_DOWN',
-    'STATUS_ENABLED'
+    'STATUS_ENABLED',
+    'WarthogError',
+    'WarthogAuthCloseError',
+    'WarthogAuthFailureError',
+    'WarthogInvalidSessionError',
+    'WarthogNodeDisableError',
+    'WarthogNodeEnableError',
+    'WarthogNodeStatusError',
+    'WarthogNoSuchNodeError'
 ]

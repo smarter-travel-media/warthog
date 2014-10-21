@@ -5,8 +5,6 @@
 .. versionadded:: 0.4.0
 """
 
-from __future__ import print_function, division
-
 import sys
 import collections
 

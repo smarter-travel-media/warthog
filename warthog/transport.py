@@ -14,8 +14,6 @@ warthog.transport
 Methods to configure how to interact with the load balancer API over HTTP or HTTPS.
 """
 
-from __future__ import print_function, division
-
 import ssl
 
 import warnings

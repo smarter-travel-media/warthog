@@ -14,8 +14,6 @@ warthog.exceptions
 Exceptions raised by the Warthog client or library.
 """
 
-from __future__ import print_function, division
-
 
 class WarthogError(Exception):
     """Base for all expected errors raised by the Warthog client and library.
