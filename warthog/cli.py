@@ -44,7 +44,7 @@ ClientConfig = collections.namedtuple(
     'ClientConfig', ['scheme_host', 'username', 'password', 'verify'])
 
 
-def get_config_location(option):
+def get_config_location(override):
     """Get the location of the configuration file to load.
 
     If the file passed as a command line argument is non-None it will
@@ -52,13 +52,13 @@ def get_config_location(option):
     location will be checked to see of the configuration file exists. If
     there are no configuration files available, return None.
 
-    :param basestring option: Possibly ``None`` path to a configuration file
+    :param basestring override: Possibly ``None`` path to a configuration file
     :return: The location of the configuration file that should be loaded
         or ``None``
     :rtype: basestring
     """
-    if option is not None:
-        return option
+    if override is not None:
+        return override
 
     for location in DEFAULT_CONFIG_LOCATIONS:
         if os.path.exists(location):
