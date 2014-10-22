@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+#
+# Warthog - Simple client for A10 load balancers
+#
+# Copyright 2014 Smarter Travel
+#
+# Available under the MIT license. See LICENSE for details.
+#
 
 """CLI interface for interacting with a load balancer using the Warthog client.
 
