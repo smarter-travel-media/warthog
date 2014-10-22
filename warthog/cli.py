@@ -25,6 +25,8 @@ import warthog.api
 import warthog.exceptions
 
 
+
+
 # List of locations (from most preferred to least preferred) that will
 # be searched for a configuration file if the location is not specified
 # as an option.
@@ -74,11 +76,11 @@ def get_parser(location):
     :param basestring location: Path to a configuration file to open
     :return: Configuration parser to load the Warthog configuration from
     :rtype: configparser.SafeConfigParser
-    :raises RuntimeError: If the location of the config file was ``None`` or
-        if the file did not exist or could not be opened.
+    :raises click.BadParameter: If the location of the config file was ``None``,
+        if the file did not exist, could not be opened, or was malformed.
     """
     if location is None:
-        raise RuntimeError(
+        raise click.BadParameter(
             "No configuration file location was specified and none of "
             "the default locations checked were valid configuration files ("
             "{0} were checked).".format(', '.join(DEFAULT_CONFIG_LOCATIONS)))
@@ -87,8 +89,13 @@ def get_parser(location):
 
     try:
         parser.readfp(codecs.open(location, 'r', encoding='utf-8'))
+    except configparser.MissingSectionHeaderError:
+        raise click.BadParameter(
+            "The configuration file {0} doesn't seem to have any section "
+            "headers. Please make sure the file is correctly formatted and "
+            "re-run this command.".format(location))
     except IOError:
-        raise RuntimeError(
+        raise click.BadParameter(
             "Configuration settings couldn't be read from {0}. Please make "
             "sure the file exists and is readable by the current user.".format(
                 location))
@@ -145,15 +152,7 @@ def main(ctx, config):
         return
 
     config_file = get_config_location(config)
-    try:
-        # There was some problem opening the configuration file (doesn't
-        # exist or maybe we can't read it). Blame the user, they should have
-        # done something to prevent this. Why does everything have to be
-        # our responsibility?
-        parser = get_parser(config_file)
-    except RuntimeError as e:
-        raise click.BadParameter(str(e))
-
+    parser = get_parser(config_file)
     values = parse_config(parser)
 
     factory = None

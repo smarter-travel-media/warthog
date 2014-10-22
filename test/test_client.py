@@ -139,6 +139,18 @@ class TestWarthogClient(object):
         assert 'down' == status, 'Did not get expected status'
         assert end_cmd.send.called, 'Session end .send() did not get called'
 
+    def test_get_connections(self, commands, start_cmd, end_cmd, conn_cmd):
+        start_cmd.send.return_value = '1234'
+        conn_cmd.send.return_value = 42
+
+        client = warthog.client.WarthogClient(
+            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+
+        connections = client.get_connections('app1.example.com')
+
+        assert 42 == connections, 'Did not get expected active connections'
+        assert end_cmd.send.called, 'Session end .send() did not get called'
+
     def test_disable_server_no_active_connections(self, commands, start_cmd, end_cmd,
                                                   status_cmd, conn_cmd, disable_cmd):
         start_cmd.send.return_value = '1234'
