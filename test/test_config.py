@@ -37,7 +37,7 @@ class TestWarthogConfigLoader(object):
         codecs_open = mock.MagicMock()
         monkeypatch.setattr(codecs, 'open', codecs_open)
 
-        loader = warthog.config.WarthogConfigLoader(config_parser=parser)
+        loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(IOError):
             loader.parse_configuration()
@@ -49,7 +49,7 @@ class TestWarthogConfigLoader(object):
         codecs_open = mock.MagicMock()
         monkeypatch.setattr(codecs, 'open', codecs_open)
 
-        loader = warthog.config.WarthogConfigLoader(config_parser=parser)
+        loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(RuntimeError):
             loader.parse_configuration()
@@ -61,7 +61,7 @@ class TestWarthogConfigLoader(object):
         codecs_open = mock.MagicMock()
         monkeypatch.setattr(codecs, 'open', codecs_open)
 
-        loader = warthog.config.WarthogConfigLoader(config_parser=parser)
+        loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(RuntimeError):
             loader.parse_configuration()
@@ -83,7 +83,7 @@ class TestWarthogConfigLoader(object):
         codecs_open = mock.MagicMock()
         monkeypatch.setattr(codecs, 'open', codecs_open)
 
-        loader = warthog.config.WarthogConfigLoader(config_parser=parser)
+        loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
         settings = loader.parse_configuration()
 
         assert 'https://lb.example.com' == settings.scheme_host
