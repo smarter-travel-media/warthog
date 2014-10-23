@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-0.4.0 - Future release
-----------------------
+0.4.0 - 2014-10-23
+------------------
 * Add CLI tool for using the Warthog Client. See :doc:`cli`.
 * Add :meth:`warthog.client.WarthogClient.get_connections` method for getting the
   number of active connections to a server.
