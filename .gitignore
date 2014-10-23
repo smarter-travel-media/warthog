@@ -14,3 +14,4 @@ pylint.out
 coverage.xml
 nosetests.xml
 .tox
+warthog.ini

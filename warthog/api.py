@@ -29,6 +29,12 @@ from .client import (
     CommandFactory,
     WarthogClient)
 
+from .config import (
+    WarthogConfigLoader,
+    WarthogConfigSettings,
+    DEFAULT_CONFIG_ENCODING,
+    DEFAULT_CONFIG_LOCATIONS)
+
 from .transport import get_transport_factory
 
 from .exceptions import (
@@ -44,18 +50,31 @@ from .exceptions import (
 
 
 __all__ = [
-    'get_transport_factory',
-    'CommandFactory',
+    # warthog.core
     'NodeActiveConnectionsCommand',
     'NodeDisableCommand',
     'NodeEnableCommand',
     'NodeStatusCommand',
     'SessionEndCommand',
     'SessionStartCommand',
-    'WarthogClient',
     'STATUS_DISABLED',
     'STATUS_DOWN',
     'STATUS_ENABLED',
+
+    # warthog.client
+    'CommandFactory',
+    'WarthogClient',
+
+    # warthog.config
+    'WarthogConfigLoader',
+    'WarthogConfigSettings',
+    'DEFAULT_CONFIG_ENCODING',
+    'DEFAULT_CONFIG_LOCATIONS',
+
+    # warthog.transport
+    'get_transport_factory',
+
+    # warthog.exceptions
     'WarthogError',
     'WarthogAuthCloseError',
     'WarthogAuthFailureError',

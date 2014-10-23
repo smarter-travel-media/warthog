@@ -7,135 +7,19 @@
 # Available under the MIT license. See LICENSE for details.
 #
 
-"""CLI interface for interacting with a load balancer using the Warthog client.
+"""
+warthog.cli
+~~~~~~~~~~~
 
-.. versionadded:: 0.4.0
+CLI interface for interacting with a load balancer using the Warthog client.
 """
 
-import sys
-import collections
-
-import codecs
 import os
 import os.path
 import click
-from .six.moves import configparser
 import warthog
 import warthog.api
-import warthog.exceptions
-
-
-
-
-# List of locations (from most preferred to least preferred) that will
-# be searched for a configuration file if the location is not specified
-# as an option.
-DEFAULT_CONFIG_LOCATIONS = [
-    os.path.join('/etc', 'warthog', 'warthog.ini'),
-    os.path.join('/etc', 'warthog.ini'),
-    os.path.join(sys.prefix, 'etc', 'warthog', 'warthog.ini'),
-    os.path.join(sys.prefix, 'etc', 'warthog.ini'),
-    os.path.join(os.path.expanduser('~'), '.warthog.ini'),
-    os.path.join(os.getcwd(), 'warthog.ini')
-]
-
-# Simple struct to hold configuration information for a WarthogClient
-ClientConfig = collections.namedtuple(
-    'ClientConfig', ['scheme_host', 'username', 'password', 'verify'])
-
-
-def get_config_location(override):
-    """Get the location of the configuration file to load.
-
-    If the file passed as a command line argument is non-None it will
-    be preferred over any of the default locations. Otherwise, each default
-    location will be checked to see of the configuration file exists. If
-    there are no configuration files available, return None.
-
-    :param basestring override: Possibly ``None`` path to a configuration file
-    :return: The location of the configuration file that should be loaded
-        or ``None``
-    :rtype: basestring
-    """
-    if override is not None:
-        return override
-
-    for location in DEFAULT_CONFIG_LOCATIONS:
-        if os.path.exists(location):
-            return location
-
-    return None
-
-
-def get_parser(location):
-    """Attempt to create an INI file configuration parser that will load
-    settings from the given location.
-
-    Note that the configuration file will be opened assuming a UTF-8 encoding.
-
-    :param basestring location: Path to a configuration file to open
-    :return: Configuration parser to load the Warthog configuration from
-    :rtype: configparser.SafeConfigParser
-    :raises click.BadParameter: If the location of the config file was ``None``,
-        if the file did not exist, could not be opened, or was malformed.
-    """
-    if location is None:
-        raise click.BadParameter(
-            "No configuration file location was specified and none of "
-            "the default locations checked were valid configuration files ("
-            "{0} were checked).".format(', '.join(DEFAULT_CONFIG_LOCATIONS)))
-
-    parser = configparser.SafeConfigParser()
-
-    try:
-        parser.readfp(codecs.open(location, 'r', encoding='utf-8'))
-    except configparser.MissingSectionHeaderError:
-        raise click.BadParameter(
-            "The configuration file {0} doesn't seem to have any section "
-            "headers. Please make sure the file is correctly formatted and "
-            "re-run this command.".format(location))
-    except IOError:
-        raise click.BadParameter(
-            "Configuration settings couldn't be read from {0}. Please make "
-            "sure the file exists and is readable by the current user.".format(
-                location))
-
-    return parser
-
-
-def parse_config(parser):
-    """Use the given INI parser to build a struct of configuration values for
-    the WarthogClient. Raise a BadParameter error if there are any missing values
-    or the config file is malformed.
-
-    :param configparser.SafeConfigParser parser: Parser to use for config values
-    :return: Struct of settings for the client
-    :rtype: ClientConfig
-    :raises click.BadParameter: If the config file is malformed or any values are
-        missing.
-    """
-    try:
-        # Load all required configuration params and raise a BadParameter
-        # error if any of them are missing or if the configuration file is
-        # missing the 'warthog' section.
-        scheme_host = parser.get('warthog', 'scheme_host')
-        username = parser.get('warthog', 'username')
-        password = parser.get('warthog', 'password')
-        verify = parser.getboolean('warthog', 'verify')
-    except configparser.NoSectionError as e:
-        raise click.BadParameter(
-            "The configuration file seems to be missing a '{0}' section. Please "
-            "make sure this section exists and re-run this command.".format(e.section))
-    except configparser.NoOptionError as e:
-        raise click.BadParameter(
-            "The configuration file seems to be missing the '{0}' option. Please "
-            "make sure this option exists and re-run this command.".format(e.option))
-
-    return ClientConfig(
-        scheme_host=scheme_host,
-        username=username,
-        password=password,
-        verify=verify)
+from . import six
 
 
 @click.group()
@@ -151,12 +35,18 @@ def main(ctx, config):
     if ctx.invoked_subcommand in ('default-config', 'config-path'):
         return
 
-    config_file = get_config_location(config)
-    parser = get_parser(config_file)
-    values = parse_config(parser)
+    loader = warthog.api.WarthogConfigLoader(config_file=config)
+
+    try:
+        # Expected errors that might be raised during parsing. These will
+        # already have nice user-facing messages so we just reraise them as
+        # BadParameter exceptions with the same message.
+        settings = loader.parse_configuration()
+    except (ValueError, IOError, RuntimeError) as e:
+        raise click.BadParameter(six.text_type(e))
 
     factory = None
-    if not values.verify:
+    if not settings.verify:
         # We only need a custom command factory if we've chosen not to
         # verify certificates (since verifying them is the default). Note
         # we don't allow the SSL version to be overridden. Doing so would
@@ -164,7 +54,11 @@ def main(ctx, config):
         transport = warthog.api.get_transport_factory(verify=False)
         factory = warthog.api.CommandFactory(transport)
 
-    ctx.obj = warthog.api.WarthogClient(values.scheme_host, values.username, values.password, commands=factory)
+    ctx.obj = warthog.api.WarthogClient(
+        settings.scheme_host,
+        settings.username,
+        settings.password,
+        commands=factory)
 
 
 @click.command()
@@ -176,7 +70,7 @@ def enable(ctx, server):
         if not ctx.obj.enable_server(server):
             click.echo('{0} could not be enabled'.format(server))
             ctx.exit(1)
-    except warthog.exceptions.WarthogNoSuchNodeError:
+    except warthog.api.WarthogNoSuchNodeError:
         raise click.BadParameter("{0} doesn't appear to be a known node".format(server))
 
 
@@ -189,7 +83,7 @@ def disable(ctx, server):
         if not ctx.obj.disable_server(server):
             click.echo('{0} could not be disabled'.format(server))
             ctx.exit(1)
-    except warthog.exceptions.WarthogNoSuchNodeError:
+    except warthog.api.WarthogNoSuchNodeError:
         raise click.BadParameter("{0} doesn't appear to be a known node".format(server))
 
 
@@ -200,7 +94,7 @@ def status(ctx, server):
     """Get the status of a server by hostname."""
     try:
         click.echo(ctx.obj.get_status(server))
-    except warthog.exceptions.WarthogNoSuchNodeError:
+    except warthog.api.WarthogNoSuchNodeError:
         raise click.BadParameter("{0} doesn't appear to be a known node".format(server))
 
 
@@ -211,7 +105,7 @@ def connections(ctx, server):
     """Get active connections to a server by hostname."""
     try:
         click.echo(ctx.obj.get_connections(server))
-    except warthog.exceptions.WarthogNoSuchNodeError:
+    except warthog.api.WarthogNoSuchNodeError:
         raise click.BadParameter("{0} doesn't appear to be a known node".format(server))
 
 
@@ -230,7 +124,7 @@ def default_config():
 @click.command('config-path')
 def config_path():
     """Print the config file search PATH."""
-    click.echo(os.linesep.join(DEFAULT_CONFIG_LOCATIONS))
+    click.echo(os.linesep.join(warthog.api.DEFAULT_CONFIG_LOCATIONS))
 
 
 main.add_command(enable)
