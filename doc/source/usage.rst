@@ -176,3 +176,57 @@ the Warthog library client with certification verification disabled.
 
 
         print('Installed project on all servers!')
+
+Using an INI-style Configuration File
+-------------------------------------
+
+Since version :doc:`0.4.0 </changes>`, Warthog includes a module for parsing expected
+configuration settings. Using an external configuration file via this module allows you
+to keep credentials for your load balancer in a separate, centralized, config file instead
+of embedded in each deploy script.
+
+Use of a configuration file is not required if you are using the :class:`warthog.client.WarthogClient`
+class directly. However, if you are using the :doc:`cli`, a configuration file is required.
+
+Refer to the :doc:`cli` documentation for more information about the specific syntax
+and expected locations of the configuration file.
+
+Below is an example of loading configuration settings from one of the default locations
+for the configuration file.
+
+.. code-block:: python
+
+    from warthog.api import WarthogConfigLoader, WarthogClient
+
+    HOSTS = ['app1.example.com', 'app2.example.com']
+
+    def copy_my_project(host):
+        pass
+
+    def install_my_project(host):
+        pass
+
+    def restart_my_application(host):
+        pass
+
+    def install():
+        # We aren't specifying a custom path for a config file. This means
+        # we're letting the WarthogConfigLoader check each of the default
+        # locations for a config file.
+        config_loader = WarthogConfigLoader()
+        settings = config_loader.parse_configuration()
+
+        # Create a new instance of the client with settings we parsed from
+        # the configuration file. Hooray no hardcoded user and password!
+        client = WarthogClient(settings.scheme_host, settings.username, settings.password)
+
+        for host in HOSTS:
+            client.disable_server(host)
+
+            copy_my_project(host)
+            install_my_project(host)
+            restart_my_application(host)
+
+            client.enable_server(host)
+
+        print('Installed project on all servers!')
