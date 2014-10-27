@@ -53,8 +53,8 @@ class WarthogConfigLoader(object):
     in :data:`DEFAULT_CONFIG_LOCATIONS`.
 
     If a INI configuration parser instance is given during construction, this instance
-    will be using the load and parse the configuration file. If not given, an instance
-    of a :class:`configparser.RawConfigParser` from the standard library will be used.
+    will be used to load and parse the configuration file. If not given, an instance
+    of a :class:`configparser.SafeConfigParser` from the standard library will be used.
 
     .. note::
 
