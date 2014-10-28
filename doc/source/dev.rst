@@ -71,7 +71,7 @@ If you're new to Git or GitHub, take a look at the `GitHub help`_ site.
 Useful Commands
 ---------------
 
-As you do development on the Warthog Client, the following thing might come in handy. Note
+As you do development on the Warthog Client, the following commands might come in handy. Note
 that all these commands assume you are in the context of the virtualenv you set up earlier.
 
 Build the documentation.
