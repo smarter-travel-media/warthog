@@ -13,10 +13,6 @@ These instructions assume that you have the following things available.
 * The pip_ tool
 * Git_
 
-.. _pip: https://pip.pypa.io/en/latest/
-.. _virtualenv: https://virtualenv.pypa.io/en/latest/
-.. _Git: http://git-scm.com/
-
 Environment Setup
 -----------------
 
@@ -93,6 +89,9 @@ Run the unit tests for a specific Python version.
     $ TOXENV=py27 tox test
 
 
+.. _pip: https://pip.pypa.io/en/latest/
+.. _virtualenv: https://virtualenv.pypa.io/en/latest/
+.. _Git: http://git-scm.com/
 .. _fork: https://help.github.com/articles/fork-a-repo
 .. _pull request: https://help.github.com/articles/be-social/#pull-requests
 .. _GitHub help: https://help.github.com/

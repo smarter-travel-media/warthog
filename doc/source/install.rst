@@ -15,10 +15,6 @@ These instructions assume that you have the following things available.
 * The pip_ tool
 * Git_
 
-.. _pip: https://pip.pypa.io/en/latest/
-.. _virtualenv: https://virtualenv.pypa.io/en/latest/
-.. _Git: http://git-scm.com/
-
 Install from PyPI
 -----------------
 
@@ -93,3 +89,7 @@ You can also install the client from source into a virtual environment.
     # Install the client from the source checkout we made above
     $ cd warthog && pip install .
 
+
+.. _pip: https://pip.pypa.io/en/latest/
+.. _virtualenv: https://virtualenv.pypa.io/en/latest/
+.. _Git: http://git-scm.com/

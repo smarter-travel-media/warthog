@@ -163,10 +163,6 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
                           values include ``0``, ``no``, ``false``, and ``off``.
 ========================= =======================================================================
 
-
-.. _INI-style: http://en.wikipedia.org/wiki/INI_file
-.. _parser: https://docs.python.org/2/library/configparser.html#ConfigParser.RawConfigParser.getboolean
-
 Location
 ~~~~~~~~
 
@@ -188,3 +184,7 @@ is described below. The locations will be checked in order until one that exists
 
 If none of these paths exist and the ``--config`` option is not given, the CLI client will
 abort.
+
+
+.. _INI-style: http://en.wikipedia.org/wiki/INI_file
+.. _parser: https://docs.python.org/2/library/configparser.html#ConfigParser.RawConfigParser.getboolean
