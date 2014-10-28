@@ -74,12 +74,26 @@ Commands
     pools an error message will be displayed instead and the exit code will be
     non-zero.
 
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog status app1.example.com
+        enabled
+
 .. cmdoption:: connections <server>
 
     Get the number of active connections to the given server (by host name). The
     number of active connections will be an integer greater than or equal to zero.
     If the server is not in any load balancer pools an error message will be
     displayed instead and the exit code will be non-zero.
+
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog connections app1.example.com
+        42
 
 .. cmdoption:: disable <server>
 
@@ -90,6 +104,12 @@ Commands
     the exit code will be non-zero. The number of retries attempted is governed
     by the default value in :meth:`warthog.client.WarthogClient.disable_server`.
 
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog disable app1.example.com
+
 .. cmdoption:: enable <server>
 
     Disable the given server (by host name). The CLI client will wait until the
@@ -99,6 +119,12 @@ Commands
     be non-zero. The number of retires attempted is governed by the default
     value in :meth:`warthog.client.WarthogClient.enable_server`.
 
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog enable app1.example.com
+
 
 .. cmdoption:: default-config
 
@@ -106,10 +132,34 @@ Commands
     CLI client. The output from this command can be piped into a file and then
     edited for your particular load balancer host and credentials.
 
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog default-config
+        [warthog]
+        scheme_host = https://lb.example.com
+        username = username
+        password = password
+        verify = yes
+
+
 .. cmdoption:: config-path
 
     Print (one path per line) each of the various locations that a configuration
     file will be searched for if not specified with the ``--config`` option.
+
+    Example:
+
+    .. code-block:: bash
+
+        $ warthog config-path
+        /etc/warthog/warthog.ini
+        /etc/warthog.ini
+        /usr/local/etc/warthog/warthog.ini
+        /usr/local/etc/warthog.ini
+        /home/user/.warthog.ini
+        /home/user/something/warthog.ini
 
 
 Configuration
