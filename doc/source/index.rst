@@ -63,6 +63,7 @@ Contents
    usage
    lib
    cli
+   dev
    changes
 
 Indices and tables
