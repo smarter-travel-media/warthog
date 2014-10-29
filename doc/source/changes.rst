@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+0.4.2 - 2014-10-29
+------------------
+* Documentation improvements (:doc:`dev`).
+* Test coverage improvements in :mod:`warthog.cli`.
+
 0.4.1 - 2014-10-23
 ------------------
 * Add CLI tool for using the Warthog Client. See :doc:`cli`.
