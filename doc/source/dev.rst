@@ -16,9 +16,7 @@ These instructions assume that you have the following things available.
 Environment Setup
 -----------------
 
-
-First, fork_ the Warthog Client
-on GitHub.
+First, fork_ the Warthog Client on GitHub.
 
 Check out your fork of the source code.
 
