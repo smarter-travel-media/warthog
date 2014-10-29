@@ -138,7 +138,7 @@ Disable SSL Verification
 ------------------------
 
 If you are interacting with the load balancer over HTTPS but using a self-signed certificate,
-you'll have to disable certification verification (or get proper cert!). This example will use
+you'll have to disable certification verification (or get a proper cert!). This example will use
 the Warthog library client with certification verification disabled.
 
 .. code-block:: python
