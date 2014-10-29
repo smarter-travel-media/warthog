@@ -40,17 +40,19 @@ Using the client is easy!
 
     from warthog.api import WarthogClient
 
+    def install_my_project(server):
+        pass
+
     client = WarthogClient('https://lb.example.com', 'user', 'password')
 
     client.disable_server('app1.example.com')
-    # Install something on the server or restart your application
+    install_my_project('app1.example.com')
     client.enable_server('app1.example.com')
 
     # Or, use the client as a context manager!
 
     with client.disabled_context('app1.example.com'):
-        # install something on the server or restart your application
-        pass
+        install_my_project('app1.example.com')
 
 Contents
 --------
