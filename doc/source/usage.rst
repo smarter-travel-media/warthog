@@ -146,7 +146,10 @@ the Warthog library client with certification verification disabled.
     from __future__ import print_function
 
     import time
-    from warthog.api import get_transport_factory, CommandFactory, WarthogClient
+    from warthog.api import (
+        get_transport_factory,
+        CommandFactory,
+        WarthogClient)
 
     MY_LB_HOST = 'https://lb.example.com'
     MY_LB_USER = 'deploy'
@@ -164,9 +167,9 @@ the Warthog library client with certification verification disabled.
         pass
 
     def install():
-        transport = get_transport_factory(verify=False)
-        factory = CommandFactory(transport)
-        client = WarthogClient(MY_LB_HOST, MY_LB_USER, MY_LB_PASS, commands=factory)
+        transport_factory = get_transport_factory(verify=False)
+        command_factory = CommandFactory(transport_factory)
+        client = WarthogClient(MY_LB_HOST, MY_LB_USER, MY_LB_PASS, commands=command_factory)
 
         for host in HOSTS:
             with client.disabled_context(host):
@@ -174,6 +177,60 @@ the Warthog library client with certification verification disabled.
                 install_my_project(host)
                 restart_my_application(host)
 
+
+        print('Installed project on all servers!')
+
+
+Handle Non-Load Balanced Hosts
+------------------------------
+
+It might be the case that you use the same deploy process for multiple different environments
+(CI, QA, pre-production, production, etc.). Some of the hosts in these environments may be load
+balanced, others might be not. It might be the case that none of the hosts in a particular environment
+are load balanced. Your deploy process should be able to handle any of these cases. An example of
+handling this is below.
+
+.. code-block:: python
+
+    from __future__ import print_function
+
+    import time
+    from warthog.api import (
+        WarthogClient,
+        WarthogNoSuchNodeError)
+
+    MY_LB_HOST = 'https://lb.example.com'
+    MY_LB_USER = 'deploy'
+    MY_LB_PASS = 'Depl0yin47e!'
+
+    HOSTS = ['web-app1.example.com', 'web-app2.example.com', 'batch-jobs.example.com']
+
+    def copy_my_project(host):
+        pass
+
+    def install_my_project(host):
+        pass
+
+    def restart_my_application(host):
+        pass
+
+    def install():
+        client = WarthogClient(MY_LB_HOST, MY_LB_USER, MY_LB_PASS)
+
+        for host in HOSTS:
+            try:
+                client.disable_server(host)
+            except WarthogNoSuchNodeError:
+                use_lb = False
+            else:
+                use_lb = True
+
+            copy_my_project(host)
+            install_my_project(host)
+            restart_my_application(host)
+
+            if use_lb:
+                client.enable_server(host)
 
         print('Installed project on all servers!')
 
