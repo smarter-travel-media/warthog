@@ -182,6 +182,7 @@ class WarthogClient(object):
     _logger = warthog.core.get_log()
     _default_wait_interval = 2.0
 
+    # pylint: disable=too-many-arguments
     def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
         """Set the load balancer scheme/host/port combination, username and password
         to use for connecting and authenticating with the load balancer.
@@ -328,6 +329,7 @@ class WarthogClient(object):
     # and we could consolidate them to one method that just accepts a function and waits for
     # it to return true and then break. But, this way we have more useful debug information
     # logged at the expense of duplicate code.
+    # pylint: disable=missing-docstring
     def _wait_for_connections(self, cmd, server, max_retries):
         retries = 0
 
@@ -371,6 +373,7 @@ class WarthogClient(object):
 
             return warthog.core.STATUS_ENABLED == status.send(server)
 
+    # pylint: disable=missing-docstring
     def _wait_for_enable(self, cmd, server, max_retries):
         retries = 0
 

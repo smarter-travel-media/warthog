@@ -17,9 +17,7 @@ Basic building blocks for authentication and interaction with a load balancer.
 import logging
 
 import warthog.exceptions
-# Your IDE may think this import is bogus, it's not. It's just magic
-# lazy loading of modules that were moved between Python 2 and Python 3
-# that the six lib handles the importing of.
+# pylint: disable=import-error,no-name-in-module
 from .six.moves.urllib import parse
 
 

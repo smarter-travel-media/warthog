@@ -56,6 +56,7 @@ def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
     :rtype: callable
     """
 
+    # pylint: disable=missing-docstring
     def factory():
         transport = requests.Session()
 
@@ -73,6 +74,7 @@ def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
 class VersionedSSLAdapter(HTTPAdapter):
     """"Transport adapter that requires the use of a specific version of SSL."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, ssl_version, pool_connections=DEFAULT_POOLSIZE,
                  pool_maxsize=DEFAULT_POOLSIZE, max_retries=DEFAULT_RETRIES,
                  pool_block=DEFAULT_POOLBLOCK):
@@ -85,6 +87,7 @@ class VersionedSSLAdapter(HTTPAdapter):
             pool_block=pool_block)
 
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        # pylint: disable=attribute-defined-outside-init
         self.poolmanager = PoolManager(
             num_pools=connections, maxsize=maxsize, block=block,
             ssl_version=self.ssl_version, **pool_kwargs)

@@ -20,6 +20,7 @@ import sys
 import codecs
 import os.path
 from .six import reraise
+# pylint: disable=import-error
 from .six.moves import configparser
 
 # List of locations (from most preferred to least preferred) that will
@@ -87,6 +88,7 @@ class WarthogConfigLoader(object):
         self._config_parser = config_parser
         self._encoding = encoding
 
+    # pylint: disable=missing-docstring
     def _get_config_file(self):
         if self._config_file is not None:
             return self._config_file
@@ -97,6 +99,7 @@ class WarthogConfigLoader(object):
 
         return None
 
+    # pylint: disable=missing-docstring
     def _get_config_parser(self):
         if self._config_parser is not None:
             return self._config_parser
