@@ -15,6 +15,16 @@ These instructions assume that you have the following things available.
 * The pip_ tool
 * Git_
 
+Requirements
+------------
+
+Warthog depends on the following libraries / projects. If you have Python installed
+and use the pip_ tool for installation, these should be installed automatically.
+
+* Python 2.6 - 2.7 or Python 3.3 - Python 3.4
+* The Requests_ library (HTTP library)
+* The Click_ library (command line interface library)
+
 Install from PyPI
 -----------------
 
@@ -93,3 +103,5 @@ You can also install the client from source into a virtual environment.
 .. _pip: https://pip.pypa.io/en/latest/
 .. _virtualenv: https://virtualenv.pypa.io/en/latest/
 .. _Git: http://git-scm.com/
+.. _Requests: http://docs.python-requests.org/en/latest/
+.. _Click: http://click.pocoo.org/3/
