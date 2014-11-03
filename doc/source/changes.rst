@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-0.5.0 - Future Release
-----------------------
+0.5.0 - 2014-11-03
+------------------
 * **Breaking change** - Change all command ``.send()`` methods in :mod:`warthog.core`
   to not take any arguments to given them a consistent interface.
 * :doc:`usage` documentation improvements.
