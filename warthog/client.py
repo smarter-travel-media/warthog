@@ -57,7 +57,8 @@ class CommandFactory(object):
     def get_session_end(self, scheme_host, session_id):
         """Get a new command instance to close an existing session.
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring scheme_host: Scheme, host, and port combination of
+            the load balancer.
         :param basestring session_id: Previously authenticated session ID.
         :return: A new command to close a session.
         :rtype: warthog.core.SessionEndCommand
@@ -65,49 +66,58 @@ class CommandFactory(object):
         return warthog.core.SessionEndCommand(
             self._transport_factory(), scheme_host, session_id)
 
-    def get_server_status(self, scheme_host, session_id):
+    def get_server_status(self, scheme_host, session_id, server):
         """Get a new command to get the status (enabled / disabled) of a server.
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring scheme_host: Scheme, host, and port combination of
+            the load balancer.
         :param basestring session_id: Previously authenticated session ID.
+        :param basestring server: Host name of the server to get the status of.
         :return: A new command to get the status of a server.
         :rtype: warthog.core.NodeStatusCommand
         """
         return warthog.core.NodeStatusCommand(
-            self._transport_factory(), scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id, server)
 
-    def get_enable_server(self, scheme_host, session_id):
+    def get_enable_server(self, scheme_host, session_id, server):
         """Get a new command to enable a server at the node level.
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring scheme_host: Scheme, host, and port combination of
+            the load balancer.
         :param basestring session_id: Previously authenticated session ID.
+        :param basestring server: Host name of the server to enable.
         :return: A new command to enable a server.
         :rtype: warthog.core.NodeEnableCommand
         """
         return warthog.core.NodeEnableCommand(
-            self._transport_factory(), scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id, server)
 
-    def get_disable_server(self, scheme_host, session_id):
+    def get_disable_server(self, scheme_host, session_id, server):
         """Get a new command to disable a server at the node level.
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring scheme_host: Scheme, host, and port combination of the
+            load balancer.
         :param basestring session_id: Previously authenticated session ID.
+        :param basestring server: Host name of the server to disable.
         :return: A new command to disable a server.
         :rtype: warthog.core.NodeDisableCommand
         """
         return warthog.core.NodeDisableCommand(
-            self._transport_factory(), scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id, server)
 
-    def get_active_connections(self, scheme_host, session_id):
+    def get_active_connections(self, scheme_host, session_id, server):
         """Get a new command to get the number of active connections to a server.
 
-        :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
+        :param basestring scheme_host: Scheme, host, and port combination of
+            the load balancer.
         :param basestring session_id: Previously authenticated session ID.
+        :param basestring server: Host name of the server to get the number of
+            active connections to.
         :return: A new command to get active connections to a server.
         :rtype: warthog.core.NodeActiveConnectionsCommand
         """
         return warthog.core.NodeActiveConnectionsCommand(
-            self._transport_factory(), scheme_host, session_id)
+            self._transport_factory(), scheme_host, session_id, server)
 
 
 def _get_default_cmd_factory():
@@ -183,7 +193,8 @@ class WarthogClient(object):
     _default_wait_interval = 2.0
 
     # pylint: disable=too-many-arguments
-    def __init__(self, scheme_host, username, password, wait_interval=_default_wait_interval, commands=None):
+    def __init__(self, scheme_host, username, password,
+                 wait_interval=_default_wait_interval, commands=None):
         """Set the load balancer scheme/host/port combination, username and password
         to use for connecting and authenticating with the load balancer.
 
@@ -266,8 +277,9 @@ class WarthogClient(object):
             problems getting the status of the given server.
         """
         with self._session_context() as session:
-            cmd = self._commands.get_server_status(self._scheme_host, session)
-            return cmd.send(server)
+            cmd = self._commands.get_server_status(
+                self._scheme_host, session, server)
+            return cmd.send()
 
     def get_connections(self, server):
         """Get the current number of active connections to a server, at the node level.
@@ -290,8 +302,9 @@ class WarthogClient(object):
         .. versionadded:: 0.4.0
         """
         with self._session_context() as session:
-            cmd = self._commands.get_active_connections(self._scheme_host, session)
-            return cmd.send(server)
+            cmd = self._commands.get_active_connections(
+                self._scheme_host, session, server)
+            return cmd.send()
 
     def disable_server(self, server, max_retries=5):
         """Disable a server at the node level, optionally retrying when there are transient
@@ -316,25 +329,28 @@ class WarthogClient(object):
             problems disabling the given server.
         """
         with self._session_context() as session:
-            disable = self._commands.get_disable_server(self._scheme_host, session)
-            self._try_repeatedly(lambda: disable.send(server), max_retries)
+            disable = self._commands.get_disable_server(
+                self._scheme_host, session, server)
+            self._try_repeatedly(disable.send, max_retries)
 
-            active = self._commands.get_active_connections(self._scheme_host, session)
-            self._wait_for_connections(active, server, max_retries)
+            active = self._commands.get_active_connections(
+                self._scheme_host, session, server)
+            self._wait_for_connections(active.send, max_retries)
 
-            status = self._commands.get_server_status(self._scheme_host, session)
-            return warthog.core.STATUS_DISABLED == status.send(server)
+            status = self._commands.get_server_status(
+                self._scheme_host, session, server)
+            return warthog.core.STATUS_DISABLED == status.send()
 
     # NOTE: there's a fair amount of duplicate code between this method and _wait_for_status
     # and we could consolidate them to one method that just accepts a function and waits for
     # it to return true and then break. But, this way we have more useful debug information
     # logged at the expense of duplicate code.
     # pylint: disable=missing-docstring
-    def _wait_for_connections(self, cmd, server, max_retries):
+    def _wait_for_connections(self, conn_method, max_retries):
         retries = 0
 
         while retries < max_retries:
-            conns = cmd.send(server)
+            conns = conn_method()
             if conns == 0:
                 break
 
@@ -365,25 +381,28 @@ class WarthogClient(object):
             problems enabling the given server.
         """
         with self._session_context() as session:
-            enable = self._commands.get_enable_server(self._scheme_host, session)
-            self._try_repeatedly(lambda: enable.send(server), max_retries)
+            enable = self._commands.get_enable_server(
+                self._scheme_host, session, server)
+            self._try_repeatedly(enable.send, max_retries)
 
-            status = self._commands.get_server_status(self._scheme_host, session)
-            self._wait_for_enable(status, server, max_retries)
+            status = self._commands.get_server_status(
+                self._scheme_host, session, server)
+            self._wait_for_enable(status.send, max_retries)
 
-            return warthog.core.STATUS_ENABLED == status.send(server)
+            return warthog.core.STATUS_ENABLED == status.send()
 
     # pylint: disable=missing-docstring
-    def _wait_for_enable(self, cmd, server, max_retries):
+    def _wait_for_enable(self, status_method, max_retries):
         retries = 0
 
         while retries < max_retries:
-            status = cmd.send(server)
+            status = status_method()
             if status == warthog.core.STATUS_ENABLED:
                 break
 
             self._logger.debug(
-                "Server is not yet enabled (%s), sleeping for %s seconds...", status, self._interval)
+                "Server is not yet enabled (%s), sleeping for %s seconds...",
+                status, self._interval)
             time.sleep(self._interval)
             retries += 1
 

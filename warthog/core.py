@@ -137,7 +137,7 @@ class _AuthenticatedCommand(object):
         self._scheme_host = scheme_host
         self._session_id = session_id
 
-    def send(self, *args):
+    def send(self):
         """Abstract method for making a request to the load balancer API and parsing
         the result and returning any meaningful information (implementation specific).
         """
@@ -185,9 +185,25 @@ class NodeEnableCommand(_AuthenticatedCommand):
     This class is thread safe.
     """
 
-    def send(self, server):
-        """Mark the given server as 'enabled' at the node level and return
-        ``True`` if it was successfully enabled.
+    def __init__(self, transport, scheme_host, session_id, server):
+        """Set the requests transport layer, scheme and host of the load balancer,
+        existing session ID to use for authentication, and hostname of the server
+        to enable.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring session_id: Session ID from a previous authentication request
+            made to the load balancer.
+        :param basestring server: Host name of the server to enable.
+        """
+        super(NodeEnableCommand, self).__init__(transport, scheme_host, session_id)
+        self._server = server
+
+    def send(self):
+        """Mark a server as 'enabled' at the node level and return ``True`` if it was
+        successfully enabled.
 
         :return: True if the server was marked as enabled
         :rtype: bool
@@ -200,11 +216,11 @@ class NodeEnableCommand(_AuthenticatedCommand):
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
-        params['name'] = server
-        params['server'] = server
+        params['name'] = self._server
+        params['server'] = self._server
         params['status'] = 1
 
-        self._logger.debug('Making node enable POST request for %s', server)
+        self._logger.debug('Making node enable POST request for %s', self._server)
         response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -212,7 +228,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         if json['response']['status'] == 'fail':
             raise _get_exception_for_response(
                 warthog.exceptions.WarthogNodeEnableError,
-                'Could not enable node {0}'.format(server),
+                'Could not enable node {0}'.format(self._server),
                 json['response'])
 
         return json['response']['status'] == 'OK'
@@ -224,9 +240,25 @@ class NodeDisableCommand(_AuthenticatedCommand):
     This class is thread safe.
     """
 
-    def send(self, server):
-        """Mark the given server as 'disabled' at the node level and return
-        ``True`` if it was successfully disabled.
+    def __init__(self, transport, scheme_host, session_id, server):
+        """Set the requests transport layer, scheme and host of the load balancer,
+        existing session ID to use for authentication, and hostname of the server
+        to disable.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring session_id: Session ID from a previous authentication request
+            made to the load balancer.
+        :param basestring server: Host name of the server to disable.
+        """
+        super(NodeDisableCommand, self).__init__(transport, scheme_host, session_id)
+        self._server = server
+
+    def send(self):
+        """Mark a server as 'disabled' at the node level and return ``True`` if it
+        was successfully disabled.
 
         :return: True if the server was marked as disabled
         :rtype: bool
@@ -239,11 +271,11 @@ class NodeDisableCommand(_AuthenticatedCommand):
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
-        params['name'] = server
-        params['server'] = server
+        params['name'] = self._server
+        params['server'] = self._server
         params['status'] = 0
 
-        self._logger.debug('Making node disable POST request for %s', server)
+        self._logger.debug('Making node disable POST request for %s', self._server)
         response = self._transport.post(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -251,7 +283,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         if json['response']['status'] == 'fail':
             raise _get_exception_for_response(
                 warthog.exceptions.WarthogNodeDisableError,
-                'Could not disable node {0}'.format(server),
+                'Could not disable node {0}'.format(self._server),
                 json['response'])
 
         return json['response']['status'] == 'OK'
@@ -264,9 +296,25 @@ class NodeStatusCommand(_AuthenticatedCommand):
     This class is thread safe.
     """
 
-    def send(self, server):
-        """Get the current status of the given server at the node level and return
-        one of the `STATUS_ENABLED`, `STATUS_DISABLED`, `STATUS_DOWN` constants.
+    def __init__(self, transport, scheme_host, session_id, server):
+        """Set the requests transport layer, scheme and host of the load balancer,
+        existing session ID to use for authentication, and hostname of the server
+        to get the status of.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring session_id: Session ID from a previous authentication request
+            made to the load balancer.
+        :param basestring server: Host name of the server to get the status of.
+        """
+        super(NodeStatusCommand, self).__init__(transport, scheme_host, session_id)
+        self._server = server
+
+    def send(self):
+        """Get the current status of a server at the node level and return one of the
+        ``STATUS_ENABLED``, ``STATUS_DISABLED``, ``STATUS_DOWN`` constants.
 
         :return: The status of the server as a constant string
         :rtype: basestring
@@ -279,9 +327,9 @@ class NodeStatusCommand(_AuthenticatedCommand):
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_STATUS, self._session_id)
-        params['name'] = server
+        params['name'] = self._server
 
-        self._logger.debug('Making node status GET request for %s', server)
+        self._logger.debug('Making node status GET request for %s', self._server)
         response = self._transport.get(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -289,7 +337,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
         if 'server_stat' not in json:
             raise _get_exception_for_response(
                 warthog.exceptions.WarthogNodeStatusError,
-                'Could not get status of {0}'.format(server),
+                'Could not get status of {0}'.format(self._server),
                 json['response'])
 
         status = json['server_stat']['status']
@@ -301,7 +349,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
             return STATUS_DOWN
 
         raise warthog.exceptions.WarthogNodeStatusError(
-            'Unknown status of {0}: status={1}'.format(server, status))
+            'Unknown status of {0}: status={1}'.format(self._server, status))
 
 
 class NodeActiveConnectionsCommand(_AuthenticatedCommand):
@@ -310,7 +358,23 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
     This class is thread safe.
     """
 
-    def send(self, server):
+    def __init__(self, transport, scheme_host, session_id, server):
+        """Set the requests transport layer, scheme and host of the load balancer,
+        existing session ID to use for authentication, and hostname of the server
+        to get active connections for.
+
+        :param requests.Session transport: Configured requests session instance to
+            use for making HTTP or HTTPS requests to the load balancer API.
+        :param basestring scheme_host: Scheme and hostname of the load balancer to use for
+            making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
+        :param basestring session_id: Session ID from a previous authentication request
+            made to the load balancer.
+        :param basestring server: Host name of the server to get active connections for.
+        """
+        super(NodeActiveConnectionsCommand, self).__init__(transport, scheme_host, session_id)
+        self._server = server
+
+    def send(self):
         """Get the current number of active connections for a node as an int.
 
         :return: The number of active connections for a node across all ports
@@ -324,9 +388,9 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         """
         url = _get_base_url(self._scheme_host)
         params = _get_base_query_params(_ACTION_STATISTICS, self._session_id)
-        params['name'] = server
+        params['name'] = self._server
 
-        self._logger.debug('Making active connection count GET request for %s', server)
+        self._logger.debug('Making active connection count GET request for %s', self._server)
         response = self._transport.get(url, params=params)
         self._logger.debug(response.text)
         json = response.json()
@@ -334,15 +398,15 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         if 'server_stat' not in json:
             raise _get_exception_for_response(
                 warthog.exceptions.WarthogNodeStatusError,
-                'Could not get status of {0}'.format(server),
+                'Could not get status of {0}'.format(self._server),
                 json['response'])
 
         return json['server_stat']['cur_conns']
 
 
 def _extract_error_message(response):
-    """Get a two element tuple of the form ``msg, code`` where ``msg`` is
-    an error message returned by the API and ``code`` is a numeric code associated
+    """Get a two element tuple of the form ``msg, code`` where ``msg`` is an
+    error message returned by the API and ``code`` is a numeric code associated
     with that particular error.
     """
     if response['status'] == 'fail':
