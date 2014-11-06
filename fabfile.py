@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import (
+    hide,
     lcd,
     local,
+    quiet,
     task,
     warn_only)
 
@@ -27,6 +29,15 @@ def docs():
 def lint():
     with warn_only():
         local('pylint --rcfile .pylintrc warthog')
+
+
+@task
+def coverage():
+    with quiet():
+        local('coverage run --source warthog ./env/bin/py.test test')
+
+    with hide('running'):
+        local('coverage report  --omit warthog/six.py --show-missing')
 
 
 @task
