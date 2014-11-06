@@ -48,7 +48,7 @@ class WarthogError(Exception):
         return '. '.join(out)
 
     def __repr__(self):
-        return '{clazz}({msg}, api_msg={api_msg}, api_code={api_code})'.format(
+        return '{clazz}("{msg}", api_msg="{api_msg}", api_code={api_code})'.format(
             clazz=self.__class__.__name__, msg=self.msg, api_msg=self.api_msg,
             api_code=self.api_code)
 
