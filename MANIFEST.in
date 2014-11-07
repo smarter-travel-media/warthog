@@ -1,0 +1,11 @@
+include LICENSE MANIFEST.in README.rst requirements.txt requirements-dev.txt
+recursive-include doc/source *
+recursive-exclude dist *
+recursive-exclude build *
+recursive-exclude avalonms.egg-info *
+global-exclude *~
+global-exclude *.tmp
+global-exclude *.bak
+global-exclude *.old
+global-exclude .git
+global-exclude .#*
