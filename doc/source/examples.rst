@@ -1,7 +1,7 @@
-Usage
-=====
+Examples
+========
 
-Some of the typical use cases for the Warthog library client are detailed below.
+Some examples of the typical use cases for the Warthog library client are detailed below.
 
 Usage During Deploy
 -------------------

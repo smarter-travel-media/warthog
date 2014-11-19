@@ -62,7 +62,7 @@ Contents
 
    install
    design
-   usage
+   examples
    lib
    cli
    dev

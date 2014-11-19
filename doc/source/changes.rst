@@ -1,11 +1,15 @@
 Change Log
 ==========
 
+0.5.1 - Future release
+----------------------
+* Rename "Usage" documentation section to "Examples".
+
 0.5.0 - 2014-11-03
 ------------------
 * **Breaking change** - Change all command ``.send()`` methods in :mod:`warthog.core`
   to not take any arguments to given them a consistent interface.
-* :doc:`usage` documentation improvements.
+* :doc:`examples` documentation improvements.
 * Various code quality improvements.
 
 0.4.2 - 2014-10-29
@@ -34,7 +38,7 @@ Change Log
 
 0.2.0 - 2014-10-14
 ------------------
-* Add :doc:`design`, :doc:`usage`, and :doc:`lib` documentation.
+* Add :doc:`design`, :doc:`examples`, and :doc:`lib` documentation.
 * Add test to ensure exported API is consistent.
 
 0.1.0 - 2014-10-11
