@@ -10,6 +10,9 @@ Functionality in the :mod:`warthog.core`, :mod:`warthog.client`, :mod:`warthog.c
 under a single, flat namespace. This allows a simple and consistent way to interact with
 the library.
 
+When using the library, always make sure to access classes and functions through
+the :mod:`warthog.api` module, not each individual module.
+
 .. automodule:: warthog.core
     :special-members: __init__,__call__,__enter__,__exit__
     :members: SessionStartCommand, SessionEndCommand, NodeActiveConnectionsCommand,
