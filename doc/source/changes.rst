@@ -1,8 +1,11 @@
 Change Log
 ==========
 
-0.5.1 - Future release
+0.6.0 - Future release
 ----------------------
+* **Breaking change** - Remove :meth:`warthog.config.WarthogConfigLoader.parse_configuration`
+  method and split the functionality into two new methods. Additionally, the class is
+  now thread safe.
 * Rename "Usage" documentation section to "Examples".
 
 0.5.0 - 2014-11-03

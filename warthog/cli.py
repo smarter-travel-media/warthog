@@ -41,11 +41,13 @@ def main(ctx, config):
         # Expected errors that might be raised during parsing. These will
         # already have nice user-facing messages so we just reraise them as
         # BadParameter exceptions with the same message.
-        settings = loader.parse_configuration()
+        loader.initialize()
     except (ValueError, IOError, RuntimeError) as e:
         raise click.BadParameter(six.text_type(e))
 
+    settings = loader.get_settings()
     factory = None
+
     if not settings.verify:
         # We only need a custom command factory if we've chosen not to
         # verify certificates (since verifying them is the default). Note

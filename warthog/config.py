@@ -15,6 +15,7 @@ Load and parse configuration for a client from an INI-style file.
 """
 
 import collections
+import threading
 import sys
 
 import codecs
@@ -63,9 +64,17 @@ class WarthogConfigLoader(object):
         be checked to see if it exists. It will not be checked to see if the file is
         readable or correctly formatted.
 
-    This class is not thread safe.
+    This class is thread safe.
 
     .. versionadded:: 0.4.0
+
+    .. versionchanged:: 0.6.0
+        Loading, parsing, and access of configuration settings is now thread safe.
+
+    .. versionchanged:: 0.6.0
+        The .parse_configuration() method has been removed and the functionality has
+        been split into the .initialize() and .get_settings() methods. Additionally,
+        loading and access of configuration settings is now thread safe.
     """
 
     def __init__(self, config_file=None, config_parser=None, encoding=DEFAULT_CONFIG_ENCODING):
@@ -87,6 +96,8 @@ class WarthogConfigLoader(object):
         self._config_file = config_file
         self._config_parser = config_parser
         self._encoding = encoding
+        self._lock = threading.RLock()
+        self._settings = None
 
     # pylint: disable=missing-docstring
     def _get_config_file(self):
@@ -105,19 +116,8 @@ class WarthogConfigLoader(object):
             return self._config_parser
         return configparser.SafeConfigParser()
 
-    def parse_configuration(self):
-        """Load and parse a configuration file and return the settings for a WarthogClient
-        as an immutable struct (:class:`WarthogClientConfig`).
-
-        :return: A struct of settings for configuring a WarthogClient instance.
-        :rtype: WarthogClientConfig
-        :raises ValueError: If no explicit configuration file was given and there were no
-            configuration files in any of the default locations checked.
-        :raises IOError: If the configuration file could not be opened or read for some
-            reason.
-        :raises RuntimeError: If the configuration file was malformed such has missing
-            the required 'warthog' section or any of the expected settings.
-        """
+    # pylint: disable=missing-docstring
+    def _parse_config_file(self):
         config_file = self._get_config_file()
         config_parser = self._get_config_parser()
 
@@ -162,4 +162,42 @@ class WarthogConfigLoader(object):
             password=password,
             verify=verify)
 
+    def initialize(self):
+        """Load and parse a configuration an INI-style configuration file.
 
+        The values parsed will be stored as a :class:`WarthogClientConfig` instance that
+        may be accessed with the :meth:`get_settings` method.
+
+        .. versionadded:: 0.6.0
+
+        :return: Fluent interface
+        :rtype: WarthogConfigLoader
+        :raises ValueError: If no explicit configuration file was given and there were no
+            configuration files in any of the default locations checked.
+        :raises IOError: If the configuration file could not be opened or read for some
+            reason.
+        :raises RuntimeError: If the configuration file was malformed such has missing the
+            required 'warthog' section or any of the expected values. See the :doc:`cli`
+            section for more information about the expected configuration settings.
+        """
+        with self._lock:
+            self._settings = self._parse_config_file()
+        return self
+
+    def get_settings(self):
+        """Get previously loaded and parsed configuration settings, raise an exception
+        if the settings have not already been loaded and parsed.
+
+        .. versionadded:: 0.6.0
+
+        :return: Struct of configuration settings for the Warthog client
+        :rtype: WarthogConfigSettings
+        :raises RuntimeError: If a configuration file has not already been loaded and
+            parsed.
+        """
+        with self._lock:
+            if self._settings is None:
+                raise RuntimeError(
+                    "Configuration file must be loaded and parsed before "
+                    "settings can be used (via the .initialize() method")
+            return self._settings

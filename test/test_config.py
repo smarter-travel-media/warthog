@@ -13,7 +13,7 @@ from warthog.six.moves import configparser
 
 
 class TestWarthogConfigLoader(object):
-    def test_parse_configuration_no_explict_config_no_default_config(self, monkeypatch):
+    def test_initialize_no_explict_config_no_default_config(self, monkeypatch):
         path_exists = mock.MagicMock()
         path_exists.return_value = False
 
@@ -22,15 +22,15 @@ class TestWarthogConfigLoader(object):
         loader = warthog.config.WarthogConfigLoader()
 
         with pytest.raises(ValueError):
-            loader.parse_configuration()
+            loader.initialize()
 
-    def test_parse_configuration_explicit_config_file_does_not_exist(self):
+    def test_initialize_explicit_config_file_does_not_exist(self):
         loader = warthog.config.WarthogConfigLoader(config_file=str(uuid.uuid4()))
 
         with pytest.raises(IOError):
-            loader.parse_configuration()
+            loader.initialize()
 
-    def test_parse_configuration_cannot_read_file(self, monkeypatch):
+    def test_initialize_cannot_read_file(self, monkeypatch):
         parser = mock.Mock(spec=configparser.SafeConfigParser)
         parser.readfp.side_effect = IOError("OH NO!")
 
@@ -40,9 +40,9 @@ class TestWarthogConfigLoader(object):
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(IOError):
-            loader.parse_configuration()
+            loader.initialize()
 
-    def test_parse_configuration_no_section(self, monkeypatch):
+    def test_initialize_no_section(self, monkeypatch):
         parser = mock.Mock(spec=configparser.SafeConfigParser)
         parser.get.side_effect = configparser.NoSectionError('warthog')
 
@@ -52,9 +52,9 @@ class TestWarthogConfigLoader(object):
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(RuntimeError):
-            loader.parse_configuration()
+            loader.initialize()
 
-    def test_parse_configuration_no_option(self, monkeypatch):
+    def test_initialize_no_option(self, monkeypatch):
         parser = mock.Mock(spec=configparser.SafeConfigParser)
         parser.get.side_effect = configparser.NoOptionError('warthog', 'scheme_host')
 
@@ -64,9 +64,16 @@ class TestWarthogConfigLoader(object):
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
         with pytest.raises(RuntimeError):
-            loader.parse_configuration()
+            loader.initialize()
 
-    def test_parse_configuration_success(self, monkeypatch):
+    def test_get_settings_not_parsed_yet(self):
+        parser = mock.Mock(spec=configparser.SafeConfigParser)
+        loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
+
+        with pytest.raises(RuntimeError):
+            loader.get_settings()
+
+    def test_get_settings_success(self, monkeypatch):
         def get_vals(_, option):
             if option == 'scheme_host':
                 return 'https://lb.example.com'
@@ -84,7 +91,8 @@ class TestWarthogConfigLoader(object):
         monkeypatch.setattr(codecs, 'open', codecs_open)
 
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
-        settings = loader.parse_configuration()
+        loader.initialize()
+        settings = loader.get_settings()
 
         assert 'https://lb.example.com' == settings.scheme_host
         assert 'username' == settings.username

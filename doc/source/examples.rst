@@ -271,7 +271,8 @@ for the configuration file.
         # we're letting the WarthogConfigLoader check each of the default
         # locations for a config file.
         config_loader = WarthogConfigLoader()
-        settings = config_loader.parse_configuration()
+        config_loader.initialize()
+        settings = config_loader.get_settings()
 
         # Create a new instance of the client with settings we parsed from
         # the configuration file. Hooray no hardcoded user and password!
