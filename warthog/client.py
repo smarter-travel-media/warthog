@@ -416,7 +416,7 @@ class WarthogClient(object):
         while True:
             try:
                 return method()
-            except warthog.exceptions.WarthogError as e:
+            except warthog.exceptions.WarthogApiError as e:
                 if e.api_code not in warthog.core.TRANSIENT_ERRORS or retries >= max_retries:
                     raise
                 self._logger.debug(

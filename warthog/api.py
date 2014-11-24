@@ -39,14 +39,14 @@ from .transport import get_transport_factory
 
 from .exceptions import (
     WarthogError,
+    WarthogApiError,
     WarthogAuthCloseError,
     WarthogAuthFailureError,
     WarthogInvalidSessionError,
     WarthogNodeDisableError,
     WarthogNodeEnableError,
     WarthogNodeStatusError,
-    WarthogNoSuchNodeError
-)
+    WarthogNoSuchNodeError)
 
 
 __all__ = [
@@ -76,6 +76,7 @@ __all__ = [
 
     # warthog.exceptions
     'WarthogError',
+    'WarthogApiError',
     'WarthogAuthCloseError',
     'WarthogAuthFailureError',
     'WarthogInvalidSessionError',

@@ -1,16 +1,23 @@
 Change Log
 ==========
 
+0.7.0 - Future release
+----------------------
+* **Breaking change** - Changed error hierarchy so that all errors related to interacting
+  with the load balancer now extend from :class:`warthog.exceptions.WarthogApiError`. The
+  root error class :class:`warthog.exceptions.WarthogError` no longer contains any
+  functionality specific to making API requests to the load balancer.
+
 0.6.0 - 2014-11-20
 ------------------
-* **Breaking change** - Remove :meth:`warthog.config.WarthogConfigLoader.parse_configuration`
+* **Breaking change** - Removed :meth:`warthog.config.WarthogConfigLoader.parse_configuration`
   method and split the functionality into two new methods. Additionally, the class is
   now thread safe.
-* Rename "Usage" documentation section to "Examples".
+* Renamed "Usage" documentation section to ":doc:`examples`".
 
 0.5.0 - 2014-11-03
 ------------------
-* **Breaking change** - Change all command ``.send()`` methods in :mod:`warthog.core`
+* **Breaking change** - Changed all command ``.send()`` methods in :mod:`warthog.core`
   to not take any arguments to given them a consistent interface.
 * :doc:`examples` documentation improvements.
 * Various code quality improvements.
@@ -22,27 +29,27 @@ Change Log
 
 0.4.1 - 2014-10-23
 ------------------
-* Add CLI tool for using the Warthog Client. See :doc:`cli`.
-* Add :meth:`warthog.client.WarthogClient.get_connections` method for getting the
+* Added CLI tool for using the Warthog Client. See :doc:`cli`.
+* Added :meth:`warthog.client.WarthogClient.get_connections` method for getting the
   number of active connections to a server.
-* Add Exceptions in :mod:`warthog.exceptions` to the public api in :mod:`warthog.api`.
-* Add config parsing module :mod:`warthog.config` and add it to the public api in :mod:`warthog.api`.
+* Added Exceptions in :mod:`warthog.exceptions` to the public api in :mod:`warthog.api`.
+* Added config parsing module :mod:`warthog.config` and add it to the public api in :mod:`warthog.api`.
 
 0.3.1 - 2014-10-17
 ------------------
-* Change ``setup.py`` script to not require setuptools.
+* Changed ``setup.py`` script to not require setuptools.
 
 0.3.0 - 2014-10-16
 ------------------
-* Add :doc:`install` documentation.
-* Change authentication request (:class:`warthog.core.SessionStartCommand`) to use ``POST``
+* Added :doc:`install` documentation.
+* Changed authentication request (:class:`warthog.core.SessionStartCommand`) to use ``POST``
   instead of ``GET`` though there doesn't seem to be any actual difference as far as the
   load balancer API is concerned.
 
 0.2.0 - 2014-10-14
 ------------------
-* Add :doc:`design`, :doc:`examples`, and :doc:`lib` documentation.
-* Add test to ensure exported API is consistent.
+* Added :doc:`design`, :doc:`examples`, and :doc:`lib` documentation.
+* Added test to ensure exported API is consistent.
 
 0.1.0 - 2014-10-11
 ------------------

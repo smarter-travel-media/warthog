@@ -16,12 +16,25 @@ Exceptions raised by the Warthog client or library.
 
 
 class WarthogError(Exception):
-    """Base for all expected errors raised by the Warthog client and library.
+    """Base for all errors raised by the Warthog library.
 
-    In this case, 'expected' means things that could conceivably happen in the
-    normal course of interacting with the load balancer. Exceptions that aren't
-    expected will not extend from this class and will usually indicate bugs in
-    the library.
+    :ivar basestring msg: Descriptive error message for this error.
+    """
+
+    def __init__(self, msg):
+        """Set the message for this exception."""
+        super(WarthogError, self).__init__()
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+    def __repr__(self):
+        return '{clazz}("{msg}")'.format(clazz=self.__class__.__name__, msg=self.msg)
+
+
+class WarthogApiError(WarthogError):
+    """Base for errors raised in the course of interacting with the load balancer.
 
     :ivar basestring msg: Descriptive error message for this error.
     :ivar basestring api_msg: Error message for this particular problem from the
@@ -34,8 +47,7 @@ class WarthogError(Exception):
         """Set the message for this exception and optional message and code from
         the load balancer API.
         """
-        super(WarthogError, self).__init__()
-        self.msg = msg
+        super(WarthogApiError, self).__init__(msg)
         self.api_msg = api_msg
         self.api_code = api_code
 
@@ -53,29 +65,29 @@ class WarthogError(Exception):
             api_code=self.api_code)
 
 
-class WarthogAuthFailureError(WarthogError):
+class WarthogAuthFailureError(WarthogApiError):
     """The credentials for authentication are invalid."""
 
 
-class WarthogNoSuchNodeError(WarthogError):
+class WarthogNoSuchNodeError(WarthogApiError):
     """The host being operated on is unrecognized."""
 
 
-class WarthogInvalidSessionError(WarthogError):
+class WarthogInvalidSessionError(WarthogApiError):
     """The session ID used while performing some action is unrecognized."""
 
 
-class WarthogNodeStatusError(WarthogError):
+class WarthogNodeStatusError(WarthogApiError):
     """There was some error while getting the status of a node."""
 
 
-class WarthogNodeEnableError(WarthogError):
+class WarthogNodeEnableError(WarthogApiError):
     """There was some error while trying to enable a node."""
 
 
-class WarthogNodeDisableError(WarthogError):
+class WarthogNodeDisableError(WarthogApiError):
     """There was some error while trying to disable a node."""
 
 
-class WarthogAuthCloseError(WarthogError):
+class WarthogAuthCloseError(WarthogApiError):
     """There was some error while trying to end a session."""
