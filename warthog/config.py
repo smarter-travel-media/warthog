@@ -73,8 +73,7 @@ class WarthogConfigLoader(object):
 
     .. versionchanged:: 0.6.0
         The .parse_configuration() method has been removed and the functionality has
-        been split into the .initialize() and .get_settings() methods. Additionally,
-        loading and access of configuration settings is now thread safe.
+        been split into the .initialize() and .get_settings() methods.
     """
 
     def __init__(self, config_file=None, config_parser=None, encoding=DEFAULT_CONFIG_ENCODING):
