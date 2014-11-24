@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-0.7.0 - Future release
-----------------------
+0.7.0 - 2014-11-24
+------------------
 * **Breaking change** - Changed error hierarchy so that all errors related to interacting
   with the load balancer now extend from :class:`warthog.exceptions.WarthogApiError`. The
   root error class :class:`warthog.exceptions.WarthogError` no longer contains any
