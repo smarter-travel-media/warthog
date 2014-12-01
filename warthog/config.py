@@ -20,6 +20,7 @@ import sys
 
 import codecs
 import os.path
+import warthog.exceptions
 from .six import reraise
 # pylint: disable=import-error
 from .six.moves import configparser
@@ -98,16 +99,20 @@ class WarthogConfigLoader(object):
         self._lock = threading.RLock()
         self._settings = None
 
-    # pylint: disable=missing-docstring
     def _get_config_file(self):
+        """Get a tuple of the configuration file that should be used and the list
+        of locations checked to attempt to find the correct file. If no config file
+        could be found the first element will be None, the second element will still
+        be the list of locations searched.
+        """
         if self._config_file is not None:
-            return self._config_file
+            return self._config_file, [self._config_file]
 
         for location in DEFAULT_CONFIG_LOCATIONS:
             if os.path.exists(location):
-                return location
+                return location, DEFAULT_CONFIG_LOCATIONS
 
-        return None
+        return None, DEFAULT_CONFIG_LOCATIONS
 
     # pylint: disable=missing-docstring
     def _get_config_parser(self):
@@ -117,28 +122,35 @@ class WarthogConfigLoader(object):
 
     # pylint: disable=missing-docstring
     def _parse_config_file(self):
-        config_file = self._get_config_file()
+        config_file, checked = self._get_config_file()
         config_parser = self._get_config_parser()
 
         if config_file is None:
-            raise ValueError(
+            raise warthog.exceptions.WarthogNoConfigFileError(
                 "No configuration file was specified. Please set a "
                 "configuration file or ensure that a configuration "
-                "file exists in one of the default locations checked.")
+                "file exists in one of the default locations checked",
+                locations_checked=checked)
 
         try:
             with codecs.open(config_file, 'r', encoding=self._encoding) as handle:
                 config_parser.readfp(handle)
         except IOError as e:
-            # Use reraise here to create a new IOError instance with a more helpful
-            # error message but preserve the traceback of the original error that
-            # was raised.
             reraise(
-                IOError,
-                IOError(
+                warthog.exceptions.WarthogNoConfigFileError,
+                warthog.exceptions.WarthogNoConfigFileError(
                     "The configuration file does not exist or could not read. "
                     "Please make sure {0} exists and can be read by the current "
-                    "user. Original error message: {1}".format(config_file, e)),
+                    "user. Original error message: {1}".format(config_file, e),
+                    locations_checked=checked),
+                sys.exc_info()[2])
+        except UnicodeError as e:
+            reraise(
+                warthog.exceptions.WarthogMalformedConfigFileError,
+                warthog.exceptions.WarthogMalformedConfigFileError(
+                    "The configuration file {0} doesn't seem to be correctly encoded "
+                    "{1} text. Please ensure that the file is valid text. Original "
+                    "error message: {2}".format(config_file, self._encoding, e)),
                 sys.exc_info()[2])
 
         try:
@@ -147,13 +159,13 @@ class WarthogConfigLoader(object):
             password = config_parser.get('warthog', 'password')
             verify = config_parser.getboolean('warthog', 'verify')
         except configparser.NoSectionError as e:
-            raise RuntimeError(
+            raise warthog.exceptions.WarthogMalformedConfigFileError(
                 "The configuration file seems to be missing a '{0}' section. Please "
-                "make sure this section exists.".format(e.section))
+                "make sure this section exists".format(e.section), missing_section=e.section)
         except configparser.NoOptionError as e:
-            raise RuntimeError(
+            raise warthog.exceptions.WarthogMalformedConfigFileError(
                 "The configuration file seems to be missing the '{0}' option. Please "
-                "make sure this option exists.".format(e.option))
+                "make sure this option exists".format(e.option), missing_option=e.option)
 
         return WarthogConfigSettings(
             scheme_host=scheme_host,
@@ -169,15 +181,21 @@ class WarthogConfigLoader(object):
 
         .. versionadded:: 0.6.0
 
+        .. versionchanged:: 0.8.0
+            Errors locating or parsing configuration files now result in Warthog-specific
+            exceptions (:class:`warthog.exceptions.WarthogConfigError`) instead of
+            `ValueError`, `IOError`, or `RuntimeError`.
+
         :return: Fluent interface
         :rtype: WarthogConfigLoader
-        :raises ValueError: If no explicit configuration file was given and there were no
-            configuration files in any of the default locations checked.
-        :raises IOError: If the configuration file could not be opened or read for some
+        :raises warthog.exceptions.WarthogNoConfigFileError: If no explicit configuration file
+            was given and there were no configuration files in any of the default locations
+            checked or if the configuration file could not be opened or read for some
             reason.
-        :raises RuntimeError: If the configuration file was malformed such has missing the
-            required 'warthog' section or any of the expected values. See the :doc:`cli`
-            section for more information about the expected configuration settings.
+        :raises warthog.exceptions.WarthogMalformedConfigFileError: If the configuration
+            file was malformed such has missing the required 'warthog' section or any of
+            the expected values. See the :doc:`cli` section for more information about the
+            expected configuration settings.
         """
         with self._lock:
             self._settings = self._parse_config_file()

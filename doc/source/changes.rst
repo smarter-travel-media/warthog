@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+
+0.8.0 - Future release
+----------------------
+* **Breaking change** - Changed errors raised by :class:`warthog.config.WarthogConfigLoader`
+  to be subclasses of :class:`warthog.exceptions.WarthogConfigError` instead of using errors
+  from the standard library (:class:`ValueError`, :class:`IOError`, :class:`RuntimeError`).
+
 0.7.0 - 2014-11-24
 ------------------
 * **Breaking change** - Changed error hierarchy so that all errors related to interacting

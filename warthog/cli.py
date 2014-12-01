@@ -35,6 +35,9 @@ def main(ctx, config):
     if ctx.invoked_subcommand in ('default-config', 'config-path'):
         return
 
+    # Passing the config file unconditionally here since if the user hasn't
+    # specified one it'll be None and the config loader will use the default
+    # locations.
     loader = warthog.api.WarthogConfigLoader(config_file=config)
 
     try:
@@ -42,7 +45,7 @@ def main(ctx, config):
         # already have nice user-facing messages so we just reraise them as
         # BadParameter exceptions with the same message.
         loader.initialize()
-    except (ValueError, IOError, RuntimeError) as e:
+    except warthog.api.WarthogConfigError as e:
         raise click.BadParameter(six.text_type(e))
 
     settings = loader.get_settings()

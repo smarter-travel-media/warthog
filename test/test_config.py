@@ -9,6 +9,7 @@ import os.path
 import pytest
 import mock
 import warthog.config
+import warthog.exceptions
 from warthog.six.moves import configparser
 
 
@@ -21,13 +22,13 @@ class TestWarthogConfigLoader(object):
 
         loader = warthog.config.WarthogConfigLoader()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(warthog.exceptions.WarthogNoConfigFileError):
             loader.initialize()
 
     def test_initialize_explicit_config_file_does_not_exist(self):
         loader = warthog.config.WarthogConfigLoader(config_file=str(uuid.uuid4()))
 
-        with pytest.raises(IOError):
+        with pytest.raises(warthog.exceptions.WarthogNoConfigFileError):
             loader.initialize()
 
     def test_initialize_cannot_read_file(self, monkeypatch):
@@ -39,7 +40,7 @@ class TestWarthogConfigLoader(object):
 
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
-        with pytest.raises(IOError):
+        with pytest.raises(warthog.exceptions.WarthogNoConfigFileError):
             loader.initialize()
 
     def test_initialize_no_section(self, monkeypatch):
@@ -51,7 +52,7 @@ class TestWarthogConfigLoader(object):
 
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(warthog.exceptions.WarthogMalformedConfigFileError):
             loader.initialize()
 
     def test_initialize_no_option(self, monkeypatch):
@@ -63,7 +64,7 @@ class TestWarthogConfigLoader(object):
 
         loader = warthog.config.WarthogConfigLoader(config_file='warthog.ini', config_parser=parser)
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(warthog.exceptions.WarthogMalformedConfigFileError):
             loader.initialize()
 
     def test_get_settings_not_parsed_yet(self):
