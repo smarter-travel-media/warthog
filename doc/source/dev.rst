@@ -86,6 +86,18 @@ Run the unit tests for a specific Python version.
 
     $ TOXENV=py27 tox test
 
+Run the PyLint tool to find bugs or places where best practices are not being followed.
+
+.. code-block:: bash
+
+    $ fab lint
+
+Check how much of the code in the Warthog client is covered by unit tests.
+
+.. code-block:: bash
+
+    $ fab coverage
+
 
 .. _pip: https://pip.pypa.io/en/latest/
 .. _virtualenv: https://virtualenv.pypa.io/en/latest/
