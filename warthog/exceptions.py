@@ -55,7 +55,7 @@ class WarthogNoConfigFileError(WarthogConfigError):
 
     def __repr__(self):
         return '{clazz}("{msg}", locations_checked={locations_checked})'.format(
-            self.msg, self.locations_checked)
+            clazz=self.__class__.__name__, msg=self.msg, locations_checked=self.locations_checked)
 
 
 class WarthogMalformedConfigFileError(WarthogConfigError):
