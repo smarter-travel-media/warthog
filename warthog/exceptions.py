@@ -16,21 +16,14 @@ Exceptions raised by the Warthog client or library.
 
 
 class WarthogError(Exception):
-    """Base for all errors raised by the Warthog library.
-
-    :ivar basestring msg: Descriptive error message for this error.
-    """
+    """Base for all errors raised by the Warthog library."""
 
     def __init__(self, msg):
-        """Set the message for this exception."""
         super(WarthogError, self).__init__()
         self.msg = msg
 
     def __str__(self):
         return self.msg
-
-    def __repr__(self):
-        return '{clazz}("{msg}")'.format(clazz=self.__class__.__name__, msg=self.msg)
 
 
 class WarthogConfigError(WarthogError):
@@ -41,9 +34,6 @@ class WarthogNoConfigFileError(WarthogConfigError):
     """No configuration file could be found."""
 
     def __init__(self, msg, locations_checked=None):
-        """Set the message for this exception and an optional list of paths
-        that were checked for configuration files.
-        """
         super(WarthogNoConfigFileError, self).__init__(msg)
         self.locations_checked = list(locations_checked) if locations_checked is not None else []
 
@@ -53,18 +43,11 @@ class WarthogNoConfigFileError(WarthogConfigError):
             out.append('Locations checked: ' + ', '.join(self.locations_checked))
         return '. '.join(out)
 
-    def __repr__(self):
-        return '{clazz}("{msg}", locations_checked={locations_checked})'.format(
-            clazz=self.__class__.__name__, msg=self.msg, locations_checked=self.locations_checked)
-
 
 class WarthogMalformedConfigFileError(WarthogConfigError):
     """The configuration file is missing required sections or fields."""
 
     def __init__(self, msg, missing_section=None, missing_option=None):
-        """Set the message for this exception and optional missing sections
-        or options expected in the configuration file.
-        """
         super(WarthogMalformedConfigFileError, self).__init__(msg)
         self.missing_section = missing_section
         self.missing_option = missing_option
@@ -77,28 +60,11 @@ class WarthogMalformedConfigFileError(WarthogConfigError):
             out.append('Missing-option: {0}'.format(self.missing_option))
         return '. '.join(out)
 
-    def __repr__(self):
-        return ('{clazz}("{msg}", missing_section="{missing_section}", '
-                'missing_option="{missing_option}")').format(clazz=self.__class__.__name__,
-                                                             msg=self.msg,
-                                                             missing_section=self.missing_section,
-                                                             missing_option=self.missing_option)
-
 
 class WarthogApiError(WarthogError):
-    """Base for errors raised in the course of interacting with the load balancer.
-
-    :ivar basestring msg: Descriptive error message for this error.
-    :ivar basestring api_msg: Error message for this particular problem from the
-        load balancer API if available.
-    :ivar int api_code: Error code for this particular problem from the load balancer
-        API if available.
-    """
+    """Base for errors raised in the course of interacting with the load balancer."""
 
     def __init__(self, msg, api_msg=None, api_code=None):
-        """Set the message for this exception and optional message and code from
-        the load balancer API.
-        """
         super(WarthogApiError, self).__init__(msg)
         self.api_msg = api_msg
         self.api_code = api_code
@@ -111,35 +77,38 @@ class WarthogApiError(WarthogError):
             out.append('API-code: {0}'.format(self.api_code))
         return '. '.join(out)
 
-    def __repr__(self):
-        return '{clazz}("{msg}", api_msg="{api_msg}", api_code={api_code})'.format(
-            clazz=self.__class__.__name__, msg=self.msg, api_msg=self.api_msg,
-            api_code=self.api_code)
-
 
 class WarthogAuthFailureError(WarthogApiError):
     """The credentials for authentication are invalid."""
-
-
-class WarthogNoSuchNodeError(WarthogApiError):
-    """The host being operated on is unrecognized."""
 
 
 class WarthogInvalidSessionError(WarthogApiError):
     """The session ID used while performing some action is unrecognized."""
 
 
-class WarthogNodeStatusError(WarthogApiError):
+class WarthogAuthCloseError(WarthogApiError):
+    """There was some error while trying to end a session."""
+
+
+class WarthogNodeError(WarthogApiError):
+    """Base for errors specific to operating on some individual node."""
+
+    def __init__(self, msg, api_msg=None, api_code=None, server=None):
+        super(WarthogNodeError, self).__init__(msg, api_msg=api_msg, api_code=api_code)
+        self.server = server
+
+
+class WarthogNoSuchNodeError(WarthogNodeError):
+    """The host being operated on is unrecognized."""
+
+
+class WarthogNodeStatusError(WarthogNodeError):
     """There was some error while getting the status of a node."""
 
 
-class WarthogNodeEnableError(WarthogApiError):
+class WarthogNodeEnableError(WarthogNodeError):
     """There was some error while trying to enable a node."""
 
 
-class WarthogNodeDisableError(WarthogApiError):
+class WarthogNodeDisableError(WarthogNodeError):
     """There was some error while trying to disable a node."""
-
-
-class WarthogAuthCloseError(WarthogApiError):
-    """There was some error while trying to end a session."""

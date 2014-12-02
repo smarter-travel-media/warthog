@@ -7,6 +7,7 @@ Change Log
 * **Breaking change** - Changed errors raised by :class:`warthog.config.WarthogConfigLoader`
   to be subclasses of :class:`warthog.exceptions.WarthogConfigError` instead of using errors
   from the standard library (:class:`ValueError`, :class:`IOError`, :class:`RuntimeError`).
+* Change all server-specific exceptions to be based on :class:`warthog.exceptions.WarthogNodeError`.
 
 0.7.0 - 2014-11-24
 ------------------
