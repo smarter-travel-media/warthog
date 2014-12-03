@@ -72,7 +72,8 @@ class WarthogApiError(WarthogError):
     def __str__(self):
         out = [self.msg]
         if self.api_msg is not None:
-            out.append('API-message: {0}'.format(self.api_msg))
+            # Some error messages from the A10 end with a period, others don't
+            out.append('API-message: {0}'.format(self.api_msg.rstrip('.')))
         if self.api_code is not None:
             out.append('API-code: {0}'.format(self.api_code))
         return '. '.join(out)

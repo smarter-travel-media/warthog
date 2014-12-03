@@ -132,6 +132,18 @@ class TestSessionEndCommand(object):
 
 
 class TestNodeEnableCommand(object):
+
+    def test_send_invalid_session(self, transport, response):
+        response.text = ''
+        response.json.return_value = dict(INVALID_SESSION)
+
+        with pytest.raises(warthog.exceptions.WarthogInvalidSessionError):
+            cmd = warthog.core.NodeEnableCommand(
+                transport, SCHEME_HOST, '1234', 'bad.example.com')
+            cmd.send()
+
+        assert transport.post.called, 'Expected transport ".post() to be called'
+
     def test_send_no_such_server(self, transport, response):
         response.text = ''
         response.json.return_value = dict(NO_SUCH_SERVER)
@@ -166,6 +178,17 @@ class TestNodeEnableCommand(object):
 
 
 class TestNodeDisableCommand(object):
+    def test_send_invalid_session(self, transport, response):
+        response.text = ''
+        response.json.return_value = dict(INVALID_SESSION)
+
+        with pytest.raises(warthog.exceptions.WarthogInvalidSessionError):
+            cmd = warthog.core.NodeDisableCommand(
+                transport, SCHEME_HOST, '1234', 'bad.example.com')
+            cmd.send()
+
+        assert transport.post.called, 'Expected transport ".post() to be called'
+
     def test_send_no_such_server(self, transport, response):
         response.text = ''
         response.json.return_value = dict(NO_SUCH_SERVER)
@@ -200,6 +223,17 @@ class TestNodeDisableCommand(object):
 
 
 class TestNodeStatusCommand(object):
+    def test_send_invalid_session(self, transport, response):
+        response.text = ''
+        response.json.return_value = dict(INVALID_SESSION)
+
+        with pytest.raises(warthog.exceptions.WarthogInvalidSessionError):
+            cmd = warthog.core.NodeStatusCommand(
+                transport, SCHEME_HOST, '1234', 'bad.example.com')
+            cmd.send()
+
+        assert transport.get.called, 'Expected transport ".get() to be called'
+
     def test_send_no_such_server(self, transport, response):
         response.text = ''
         response.json.return_value = dict(NO_SUCH_SERVER)
@@ -274,6 +308,17 @@ class TestNodeStatusCommand(object):
 
 
 class TestNodeActiveConnectionsCommand(object):
+    def test_send_invalid_session(self, transport, response):
+        response.text = ''
+        response.json.return_value = dict(INVALID_SESSION)
+
+        with pytest.raises(warthog.exceptions.WarthogInvalidSessionError):
+            cmd = warthog.core.NodeActiveConnectionsCommand(
+                transport, SCHEME_HOST, '1234', 'bad.example.com')
+            cmd.send()
+
+        assert transport.get.called, 'Expected transport ".get() to be called'
+
     def test_send_no_such_server(self, transport, response):
         response.text = ''
         response.json.return_value = dict(NO_SUCH_SERVER)

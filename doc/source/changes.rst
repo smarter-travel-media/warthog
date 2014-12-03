@@ -8,6 +8,8 @@ Change Log
   to be subclasses of :class:`warthog.exceptions.WarthogConfigError` instead of using errors
   from the standard library (:class:`ValueError`, :class:`IOError`, :class:`RuntimeError`).
 * Change all server-specific exceptions to be based on :class:`warthog.exceptions.WarthogNodeError`.
+* Improve error handling for CLI client when the configuration file contains an invalid load
+  balancer host (or port, etc.).
 
 0.7.0 - 2014-11-24
 ------------------

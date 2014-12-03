@@ -57,7 +57,35 @@ def get_log():
     return logging.getLogger('warthog')
 
 
-class SessionStartCommand(object):
+class _ErrorHandlerMixin(object):
+    """Mixin class for translating error responses to WarthogApiError instances."""
+
+    def _extract_error(self, default_cls, message, response):
+        """Return a WarthogApiError instance with the given error message appropriate
+        to the given API response, falling back to an instance of the default class.
+
+        If the default class is a node-specific error, the name of the current node
+        will be provided with the ``server`` keyword argument.
+
+        The ``default_cls`` must be a subclass of ``WarthogApiError``.
+        """
+        server = getattr(self, '_server', None)
+        msg, code = _extract_error_message(response)
+
+        if code == ERROR_CODE_INVALID_SESSION:
+            return warthog.exceptions.WarthogInvalidSessionError(
+                message, api_msg=msg, api_code=code)
+        if code == ERROR_CODE_NO_SUCH_SERVER:
+            return warthog.exceptions.WarthogNoSuchNodeError(
+                message, api_msg=msg, api_code=code, server=server)
+        # If this is a node specific error type include the value of the '_server'
+        # attribute of the class that this is being invoked from as a keyword arg.
+        if issubclass(default_cls, warthog.exceptions.WarthogNodeError):
+            return default_cls(message, api_msg=msg, api_code=code, server=server)
+        return default_cls(message, api_msg=msg, api_code=code)
+
+
+class SessionStartCommand(_ErrorHandlerMixin):
     """Command to authenticate with the load balancer and start a new session
     to be used by subsequent commands.
 
@@ -104,7 +132,7 @@ class SessionStartCommand(object):
         json = response.json()
 
         if 'session_id' not in json:
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogAuthFailureError,
                 'Authentication failure with {0}'.format(self._scheme_host),
                 json['response'])
@@ -144,7 +172,7 @@ class _AuthenticatedCommand(object):
         raise NotImplementedError()
 
 
-class SessionEndCommand(_AuthenticatedCommand):
+class SessionEndCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
     """Command for ending a previously authenticated session with the load balancer.
 
     This class is thread safe.
@@ -170,7 +198,7 @@ class SessionEndCommand(_AuthenticatedCommand):
         json = response.json()
 
         if json['response']['status'] == 'fail':
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogAuthCloseError,
                 'Could not close session {0} on {1}'.format(
                     self._session_id, self._scheme_host),
@@ -179,7 +207,7 @@ class SessionEndCommand(_AuthenticatedCommand):
         return json['response']['status'] == 'OK'
 
 
-class NodeEnableCommand(_AuthenticatedCommand):
+class NodeEnableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
     """Command to mark a particular server as enabled.
 
     This class is thread safe.
@@ -226,7 +254,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         json = response.json()
 
         if json['response']['status'] == 'fail':
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogNodeEnableError,
                 'Could not enable node {0}'.format(self._server),
                 json['response'])
@@ -234,7 +262,7 @@ class NodeEnableCommand(_AuthenticatedCommand):
         return json['response']['status'] == 'OK'
 
 
-class NodeDisableCommand(_AuthenticatedCommand):
+class NodeDisableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
     """Command to mark a particular server as disabled.
 
     This class is thread safe.
@@ -281,7 +309,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         json = response.json()
 
         if json['response']['status'] == 'fail':
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogNodeDisableError,
                 'Could not disable node {0}'.format(self._server),
                 json['response'])
@@ -289,7 +317,7 @@ class NodeDisableCommand(_AuthenticatedCommand):
         return json['response']['status'] == 'OK'
 
 
-class NodeStatusCommand(_AuthenticatedCommand):
+class NodeStatusCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
     """Command to get the current status ('enabled', 'disabled', 'down') of a particular
     server.
 
@@ -335,7 +363,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
         json = response.json()
 
         if 'server_stat' not in json:
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogNodeStatusError,
                 'Could not get status of {0}'.format(self._server),
                 json['response'])
@@ -352,7 +380,7 @@ class NodeStatusCommand(_AuthenticatedCommand):
             'Unknown status of {0}: status={1}'.format(self._server, status))
 
 
-class NodeActiveConnectionsCommand(_AuthenticatedCommand):
+class NodeActiveConnectionsCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
     """Command to get the number of active connections to a particular server.
 
     This class is thread safe.
@@ -396,7 +424,7 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand):
         json = response.json()
 
         if 'server_stat' not in json:
-            raise _get_exception_for_response(
+            raise self._extract_error(
                 warthog.exceptions.WarthogNodeStatusError,
                 'Could not get status of {0}'.format(self._server),
                 json['response'])
@@ -413,23 +441,6 @@ def _extract_error_message(response):
         return response['err']['msg'].strip(), response['err']['code']
     raise ValueError(
         "Unexpected response format from request: {0}".format(response))
-
-
-def _get_exception_for_response(default_cls, message, response):
-    """Get a :class:`warthog.exceptions.WarthogError` subclass specific to
-    the error code contained in the response with the given message, or an
-    instance the given default class if this is not an error associated with
-    a specific exception.
-    """
-    msg, code = _extract_error_message(response)
-
-    if code == ERROR_CODE_INVALID_SESSION:
-        cls = warthog.exceptions.WarthogInvalidSessionError
-    elif code == ERROR_CODE_NO_SUCH_SERVER:
-        cls = warthog.exceptions.WarthogNoSuchNodeError
-    else:
-        cls = default_cls
-    return cls(message, api_msg=msg, api_code=code)
 
 
 def _get_base_url(scheme_host):
