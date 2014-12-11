@@ -10,6 +10,7 @@ Change Log
 * Change all server-specific exceptions to be based on :class:`warthog.exceptions.WarthogNodeError`.
 * Improve error handling for CLI client when the configuration file contains an invalid load
   balancer host (or port, etc.).
+* Bundled 3rd-party libs moved to the :mod:`warthog.packages` package.
 
 0.7.0 - 2014-11-24
 ------------------

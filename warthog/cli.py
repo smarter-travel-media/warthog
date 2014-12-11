@@ -21,7 +21,7 @@ import os.path
 import click
 import warthog
 import warthog.api
-from . import six
+from .packages import six
 import requests
 
 

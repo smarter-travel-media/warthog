@@ -56,7 +56,7 @@ setup(
     url=URL,
     install_requires=REQUIREMENTS,
     zip_safe=True,
-    packages=['warthog'],
+    packages=['warthog', 'warthog.packages'],
     entry_points="""
         [console_scripts]
         warthog=warthog.cli:main

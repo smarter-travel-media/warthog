@@ -21,9 +21,9 @@ import sys
 import codecs
 import os.path
 import warthog.exceptions
-from .six import reraise
+from .packages import six
 # pylint: disable=import-error
-from .six.moves import configparser
+from .packages.six.moves import configparser
 
 # List of locations (from most preferred to least preferred) that will
 # be searched for a configuration file. These locations are typically
@@ -136,7 +136,7 @@ class WarthogConfigLoader(object):
             with codecs.open(config_file, 'r', encoding=self._encoding) as handle:
                 config_parser.readfp(handle)
         except IOError as e:
-            reraise(
+            six.reraise(
                 warthog.exceptions.WarthogNoConfigFileError,
                 warthog.exceptions.WarthogNoConfigFileError(
                     "The configuration file does not exist or could not read. "
@@ -145,7 +145,7 @@ class WarthogConfigLoader(object):
                     locations_checked=checked),
                 sys.exc_info()[2])
         except UnicodeError as e:
-            reraise(
+            six.reraise(
                 warthog.exceptions.WarthogMalformedConfigFileError,
                 warthog.exceptions.WarthogMalformedConfigFileError(
                     "The configuration file {0} doesn't seem to be correctly encoded "

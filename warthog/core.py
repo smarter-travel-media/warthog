@@ -18,7 +18,7 @@ import logging
 
 import warthog.exceptions
 # pylint: disable=import-error,no-name-in-module
-from .six.moves.urllib import parse
+from .packages.six.moves import urllib
 
 
 STATUS_ENABLED = 'enabled'
@@ -447,7 +447,7 @@ def _get_base_url(scheme_host):
     """Get a URL to API of the load balancer, not including any query string
     parameters.
     """
-    return parse.urljoin(
+    return urllib.parse.urljoin(
         scheme_host, 'services/rest/{version}/'.format(version=_API_VERSION))
 
 

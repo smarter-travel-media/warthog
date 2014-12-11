@@ -37,7 +37,7 @@ def coverage():
         local('coverage run --source warthog ./env/bin/py.test test')
 
     with hide('running'):
-        local('coverage report  --omit warthog/six.py --show-missing')
+        local("coverage report  --omit 'warthog/packages*' --show-missing")
 
 
 @task

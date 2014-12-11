@@ -10,7 +10,7 @@ import pytest
 import mock
 import warthog.config
 import warthog.exceptions
-from warthog.six.moves import configparser
+from warthog.packages.six.moves import configparser
 
 
 class TestWarthogConfigLoader(object):
