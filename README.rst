@@ -27,6 +27,11 @@ To install Warthog, simply run:
 
     $ pip install warthog
 
+Dependencies
+------------
+* `requests <https://github.com/kennethreitz/requests>`_  by Kenneth Reitz
+* `click <https://github.com/mitsuhiko/click>`_ by Armin Ronacher
+
 Usage
 -----
 
