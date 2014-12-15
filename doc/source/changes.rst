@@ -11,6 +11,7 @@ Change Log
 * Improve error handling for CLI client when the configuration file contains an invalid load
   balancer host (or port, etc.).
 * Bundled 3rd-party libs moved to the :mod:`warthog.packages` package.
+* Dependency on `requests <https://github.com/kennethreitz/requests>`_ updated to version 2.5.0.
 
 0.7.0 - 2014-11-24
 ------------------
