@@ -56,11 +56,22 @@ Install the checkout in "development mode".
 Contributing
 ------------
 
-Next, code up your feature or bug fix and create a `pull request`_. Keep in mind however,
-that since the Warthog Client has a very specific purpose, pull requests that are determined
-to be out of scope may not be merged.
+Next, code up your feature or bug fix and create a `pull request`_. Some things to keep in
+mind when submitting a pull request are listed below.
+
+* Your pull request should be a single commit that adds only a single feature or fixes only
+  a single bug. Take a look at this post that describes squashing_ all your commits into only
+  a single commit, or, the Github documentation on rebasing_.
+
+* If you've added a new feature, it should have unit tests. If you've fixed a bug, it should
+  *definitely* have unit tests.
+
+* Your code should follow the `Python Style Guide`_ and/or match the surrounding code.
 
 If you're new to Git or GitHub, take a look at the `GitHub help`_ site.
+
+Please keep in mind however, that since the Warthog Client has a very specific purpose, pull
+requests that are determined to be out of scope may not be merged.
 
 Useful Commands
 ---------------
@@ -105,3 +116,6 @@ Check how much of the code in the Warthog client is covered by unit tests.
 .. _fork: https://help.github.com/articles/fork-a-repo
 .. _pull request: https://help.github.com/articles/be-social/#pull-requests
 .. _GitHub help: https://help.github.com/
+.. _squashing: http://blog.steveklabnik.com/posts/2012-11-08-how-to-squash-commits-in-a-github-pull-request
+.. _rebasing: https://help.github.com/articles/using-git-rebase/
+.. _Python Style Guide: https://www.python.org/dev/peps/pep-0008/
