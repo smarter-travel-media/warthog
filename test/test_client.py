@@ -65,36 +65,6 @@ def client():
     return mock.Mock(spec=warthog.client.WarthogClient)
 
 
-def test_disabled_node_context_starts_enabled(client):
-    client.get_status.return_value = 'enabled'
-
-    with warthog.client.disabled_node_context(client, 'app1.example.com', logging.getLogger()):
-        pass
-
-    client.disable_server.assert_called_once_with('app1.example.com')
-    client.enable_server.assert_called_once_with('app1.example.com')
-
-
-def test_disabled_node_context_starts_disabled(client):
-    client.get_status.return_value = 'disabled'
-
-    with warthog.client.disabled_node_context(client, 'app1.example.com', logging.getLogger()):
-        pass
-
-    assert not client.disable_server.called, 'Unexpected call to disable server'
-    assert not client.enable_server.called, 'Unexpected call to enable server'
-
-
-def test_disabled_node_context_starts_down(client):
-    client.get_status.return_value = 'down'
-
-    with warthog.client.disabled_node_context(client, 'app1.example.com', logging.getLogger()):
-        pass
-
-    assert not client.disable_server.called, 'Unexpected call to disable server'
-    assert not client.enable_server.called, 'Unexpected call to enable server'
-
-
 def test_session_context_enter_yields_session(commands, start_cmd):
     start_cmd.send.return_value = '1234'
 

@@ -155,39 +155,14 @@ def session_context(scheme_host, username, password, commands):
             end_cmd.send()
 
 
-@contextlib.contextmanager
-def disabled_node_context(client, server, logger):
-    """Context manager that disables a server, yields, and then enables the server
-    again if it was initially enabled. If the server was disabled before we started
-    operating on it, it will be left disabled.
-
-    :param WarthogClient client: Client to use for manipulating the server
-    :param basestring server: Hostname of the server to disable and enable
-    :param logging.Logger logger: Logger instance to use
-    """
-    status = client.get_status(server)
-    is_in_lb = (status == warthog.core.STATUS_ENABLED)
-
-    if is_in_lb:
-        client.disable_server(server)
-    else:
-        logger.debug(
-            'Server %s was not in load balancer (%s), not disabling...', server, status)
-
-    yield
-
-    if is_in_lb:
-        client.enable_server(server)
-    else:
-        logger.debug(
-            'Server %s was not in load balancer (%s), not enabling...', server, status)
-
-
 class WarthogClient(object):
     """Client for interacting with an A10 load balancer to get the status
     of nodes managed by it, enable them, and disable them.
 
     This class is thread safe.
+
+    .. versionchanged:: 0.8.0
+        Removed .disabled_context() method.
     """
     _logger = warthog.core.get_log()
     _default_wait_interval = 2.0
@@ -227,37 +202,6 @@ class WarthogClient(object):
         """Get a new context manager that starts and ends a session with the load balancer."""
         self._logger.debug('Creating new session context for %s', self._scheme_host)
         return session_context(self._scheme_host, self._username, self._password, self._commands)
-
-    def disabled_context(self, server):
-        """Return a context manager that will disable the given server, yield, and then
-        enable the server. Note that the context manager will not re-enable the server
-        afterwards if the server was initially disabled.
-
-        Typical usage would look like this.
-
-        .. code-block:: python
-
-            with client.disabled_context('app1.example.com'):
-                install_my_app_or_something()
-
-        This is an equivalent and more concise way to do something like the following.
-
-        .. code-block:: python
-
-            enabled = ('enabled' == client.get_status('app1.example.com'))
-            if enabled:
-                client.disable_server('app1.example.com')
-
-            install_my_app_or_something()
-
-            if enabled:
-                client.enable_server('app1.example.com')
-
-        :param basestring server: Hostname of the server to disable and enable
-        :return: Context manager for disabling and enabling a server
-        """
-        self._logger.debug('Creating new disabled node context for %s', server)
-        return disabled_node_context(self, server, self._logger)
 
     def get_status(self, server):
         """Get the current status of the given server, at the node level.

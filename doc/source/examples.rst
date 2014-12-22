@@ -87,52 +87,6 @@ become ready to serve requests.
 
         print('Application restarted on all servers!')
 
-Usage as Context Manager
-------------------------
-
-In this example, we use the Warthog library client as a context manager that
-will automatically disable a server, and then re-enable it after the context
-exits.
-
-.. note::
-
-    When used as a context manager, the node will only be re-enabled if it
-    was enabled before we entered the context.
-
-.. code-block:: python
-
-    from __future__ import print_function
-
-    import time
-    from warthog.api import WarthogClient
-
-    MY_LB_HOST = 'https://lb.example.com'
-    MY_LB_USER = 'deploy'
-    MY_LB_PASS = 'Depl0yin47e!'
-
-    HOSTS = ['app1.example.com', 'app2.example.com']
-
-    def copy_my_project(host):
-        pass
-
-    def install_my_project(host):
-        pass
-
-    def restart_my_application(host):
-        pass
-
-    def install():
-        client = WarthogClient(MY_LB_HOST, MY_LB_USER, MY_LB_PASS)
-
-        for host in HOSTS:
-            with client.disabled_context(host):
-                copy_my_project(host)
-                install_my_project(host)
-                restart_my_application(host)
-
-
-        print('Installed project on all servers!')
-
 
 Disable SSL Verification
 ------------------------
@@ -167,15 +121,21 @@ the Warthog library client with certification verification disabled.
         pass
 
     def install():
+        # Use the 'verify=False' keyword argument here to ensure that
+        # the underlying HTTP library (requests) doesn't verify the
+        # SSL certificate.
         transport_factory = get_transport_factory(verify=False)
         command_factory = CommandFactory(transport_factory)
         client = WarthogClient(MY_LB_HOST, MY_LB_USER, MY_LB_PASS, commands=command_factory)
 
         for host in HOSTS:
-            with client.disabled_context(host):
-                copy_my_project(host)
-                install_my_project(host)
-                restart_my_application(host)
+            client.disable_server(host)
+
+            copy_my_project(host)
+            install_my_project(host)
+            restart_my_application(host)
+
+            client.enable_server(host)
 
 
         print('Installed project on all servers!')

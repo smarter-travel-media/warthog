@@ -7,6 +7,9 @@ Change Log
 * **Breaking change** - Changed errors raised by :class:`warthog.config.WarthogConfigLoader`
   to be subclasses of :class:`warthog.exceptions.WarthogConfigError` instead of using errors
   from the standard library (:class:`ValueError`, :class:`IOError`, :class:`RuntimeError`).
+* **Breaking change** - Removed the ``warthog.client.WarthogClient.disabled_context`` context
+  manager method since the level of abstraction didn't match the rest of the methods in the
+  client.
 * Change all server-specific exceptions to be based on :class:`warthog.exceptions.WarthogNodeError`.
 * Improve error handling for CLI client when the configuration file contains an invalid load
   balancer host (or port, etc.).
