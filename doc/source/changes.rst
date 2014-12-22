@@ -10,6 +10,8 @@ Change Log
 * **Breaking change** - Removed the ``warthog.client.WarthogClient.disabled_context`` context
   manager method since the level of abstraction didn't match the rest of the methods in the
   client.
+* **Breaking change** - Removed all command classes in :mod:`warthog.core` from the public API
+  (``warthog.api``). Users wishing to use them may do so at their own risk.
 * Change all server-specific exceptions to be based on :class:`warthog.exceptions.WarthogNodeError`.
 * Improve error handling for CLI client when the configuration file contains an invalid load
   balancer host (or port, etc.).
