@@ -50,11 +50,6 @@ Using the client is easy!
     install_my_project('app1.example.com')
     client.enable_server('app1.example.com')
 
-    # Or, use the client as a context manager!
-
-    with client.disabled_context('app1.example.com'):
-        install_my_project('app1.example.com')
-
 
 See `the docs <https://warthog.readthedocs.org/>`_ for more information.
 
