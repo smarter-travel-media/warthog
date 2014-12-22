@@ -9,8 +9,10 @@ Functionality in the :mod:`warthog.client`, :mod:`warthog.config`, :mod:`warthog
 and :mod:`warthog.exceptions` modules is included in this module under a single, flat
 namespace. This allows a simple and consistent way to interact with the library.
 
-When using the library, always make sure to access classes and functions through
-the :mod:`warthog.api` module, not each individual module.
+.. note::
+
+    When using the library, always make sure to access classes and functions through
+    the :mod:`warthog.api` module, not each individual module.
 
 .. automodule:: warthog.client
     :special-members: __init__,__call__,__enter__,__exit__
