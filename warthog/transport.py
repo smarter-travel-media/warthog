@@ -48,9 +48,9 @@ def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
         warnings about this emitted by the requests library will be suppressed.
     :param int ssl_version: Explicit version of SSL to use for HTTPS connections
         to an A10 load balancer. The version is a constant as specified by the
-        :mod:`ssl` module (PROTOCOL_XXX). Default is TLSv1. If you don't wish to
-        use a specific version and instead rely on the default for the requests /
-        urllib3 module, pass ``ssl_version=None``.
+        :mod:`ssl` module. The default is TLSv1. If you don't wish to use a specific
+        version and instead rely on the default for the requests / urllib3 module,
+        pass ``ssl_version=None``.
     :return: A callable to return new configured session instances for making HTTP(S)
         requests
     :rtype: callable
