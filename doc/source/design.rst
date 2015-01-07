@@ -30,7 +30,7 @@ Thread Safety
 -------------
 
 The main interfaces of the Warthog library (:class:`warthog.client.WarthogClient`,
-:class:`warthog.client.CommandFactory`, and assorted classes in :mod:`warthog.core`) are
+:class:`warthog.client.CommandFactory`, and assorted classes in :mod:`warthog.config`) are
 thread safe. Each class will also include a comment in the doc string that indicates if
 it is thread safe. The Warthog library makes use of Requests_ (for making HTTP and HTTPS
 calls to the load balancer API) which is also thread safe.
