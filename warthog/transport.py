@@ -55,18 +55,22 @@ def get_transport_factory(verify=True, ssl_version=DEFAULT_SSL_VERSION):
         requests
     :rtype: callable
     """
-
     # pylint: disable=missing-docstring
     def factory():
         transport = requests.Session()
 
         if not verify:
-            warnings.filterwarnings("ignore", category=InsecureRequestWarning)
             transport.verify = False
 
         if ssl_version is not None:
             transport.mount('https://', VersionedSSLAdapter(ssl_version))
         return transport
+
+    # Make sure that we suppress warnings about invalid certs since the user
+    # has explicitly asked us to not verify it, they know that we're doing
+    # something dangerous and don't care.
+    if not verify:
+        warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 
     return factory
 
