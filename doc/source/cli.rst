@@ -112,7 +112,7 @@ Commands
 
 .. cmdoption:: enable <server>
 
-    Disable the given server (by host name). The CLI client will wait until the
+    Enable the given server (by host name). The CLI client will wait until the
     the server enters the ``enabled`` state. If the server is not in any load
     balancer pools or did not enter the ``enabled`` state before the CLI client
     gaven up waiting an error message will be displayed and the exit code will
