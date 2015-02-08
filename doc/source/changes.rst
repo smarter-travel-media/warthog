@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-0.8.2 - 2015-02-08
+0.8.2 - 2015-02-09
 ------------------
 * Small documentation fixes.
 * Add project logo to documentation.
