@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+0.8.2 - 2015-02-08
+------------------
+* Small documentation fixes.
+* Add project logo to documentation.
+* Dependency on `requests <https://github.com/kennethreitz/requests>`_ updated to version 2.5.1.
+
 0.8.1 - 2014-12-22
 ------------------
 * Fixed small documentation issues and changed change log dates.
