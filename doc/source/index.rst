@@ -5,6 +5,9 @@
 
 .. NOTE: Make sure this page is kept up to date with README.rst
 
+.. figure:: _static/logo.png
+    :align: center
+
 Warthog
 =======
 
