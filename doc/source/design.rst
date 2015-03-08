@@ -44,6 +44,20 @@ you wish to override either of these, you can do so with the
 :func:`warthog.transport.get_transport_factory` function. See the :mod:`ssl` module
 for available SSL versions.
 
+Versions
+--------
+
+The Warthog library uses `semantic versioning`_ of the form ``major.minor.patch``. All
+backwards incompatible changes after version ``1.0.0`` will increment the major version
+number. All backwards incompatible changes prior to version ``1.0.0`` will increment the
+minor version number.
+
+Since this is a Python project, only the subset of the semantic versioning spec that is
+compatible with `PEP-440`_ will be used.
+
+.. _semantic versioning: http://semver.org/
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
+
 Alternatives
 ------------
 
