@@ -35,6 +35,8 @@ thread safe. Each class will also include a comment in the doc string that indic
 it is thread safe. The Warthog library makes use of Requests_ (for making HTTP and HTTPS
 calls to the load balancer API) which is also thread safe.
 
+.. _Requests: http://docs.python-requests.org/en/latest/
+
 SSL
 ---
 
@@ -43,6 +45,8 @@ when using SSL, certificates will be verified_, and TSLv1 will be explicitly use
 you wish to override either of these, you can do so with the
 :func:`warthog.transport.get_transport_factory` function. See the :mod:`ssl` module
 for available SSL versions.
+
+.. _verified: http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
 
 Versions
 --------
@@ -69,8 +73,5 @@ level of abstraction.
 
 You can also write_ your own client based on available documentation.
 
-
-.. _Requests: http://docs.python-requests.org/en/latest/
-.. _verified: http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
 .. _official: https://github.com/a10networks/acos-client
 .. _write: http://www.a10networks.com/products/axseries-aXAPI.php
