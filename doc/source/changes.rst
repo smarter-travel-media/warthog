@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.8.3 - Future release
+----------------------
+* Dependency on `requests <https://github.com/kennethreitz/requests>`_ updated to version 2.6.0.
+
 0.8.2 - 2015-02-09
 ------------------
 * Small documentation fixes.
