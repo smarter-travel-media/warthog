@@ -1,9 +1,11 @@
 Change Log
 ==========
 
-0.8.3 - Future release
-----------------------
+0.8.3 - 2015-03-18
+------------------
 * Dependency on `requests <https://github.com/kennethreitz/requests>`_ updated to version 2.6.0.
+* Packaging fixes (use ``twine`` for uploads to PyPI, stop using the setup.py ``register`` command).
+* Minor documentation updates.
 
 0.8.2 - 2015-02-09
 ------------------
