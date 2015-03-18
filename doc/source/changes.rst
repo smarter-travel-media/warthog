@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.8.4 - Future release
+----------------------
+* Replace examples documentation with more in depth usage guide (:doc:`usage`).
+
 0.8.3 - 2015-03-18
 ------------------
 * Dependency on `requests <https://github.com/kennethreitz/requests>`_ updated to version 2.6.0.
@@ -45,13 +49,13 @@ Change Log
 * **Breaking change** - Removed :meth:`warthog.config.WarthogConfigLoader.parse_configuration`
   method and split the functionality into two new methods. Additionally, the class is
   now thread safe.
-* Renamed "Usage" documentation section to ":doc:`examples`".
+* Renamed "Usage" documentation section to "Examples".
 
 0.5.0 - 2014-11-03
 ------------------
 * **Breaking change** - Changed all command ``.send()`` methods in :mod:`warthog.core`
   to not take any arguments to given them a consistent interface.
-* :doc:`examples` documentation improvements.
+* Examples documentation improvements.
 * Various code quality improvements.
 
 0.4.2 - 2014-10-29
@@ -80,7 +84,7 @@ Change Log
 
 0.2.0 - 2014-10-14
 ------------------
-* Added :doc:`design`, :doc:`examples`, and :doc:`lib` documentation.
+* Added :doc:`design`, Examples, and :doc:`lib` documentation.
 * Added test to ensure exported API is consistent.
 
 0.1.0 - 2014-10-11

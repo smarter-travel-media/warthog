@@ -66,7 +66,7 @@ Contents
 
    install
    design
-   examples
+   usage
    lib
    cli
    dev
