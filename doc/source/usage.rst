@@ -4,6 +4,10 @@ Usage
 Descriptions and examples of how to make use of the Warthog library in common deploy-related
 situations are outlined below.
 
+Each of the examples will create a new instance of the Warthog client but, obviously, you do
+not need to do this in your actual deploy process. In fact, you can even share the same client
+instance between multiple threads (it's thread safe and immutable).
+
 Create a Client
 ---------------
 
@@ -150,8 +154,8 @@ for the number of connections to drop to zero.
     client.disable_server('app1.example.com', max_retries=0)
 
 You can set ``max_retries`` to any number that makes sense for your deploy process. Each
-retry will be attempted two seconds apart. See :class:`warthog.client.WarthogClient` for
-more information.
+retry will be attempted two seconds apart by default. See :class:`warthog.client.WarthogClient`
+for more information about how to change the time between retries.
 
 Enable a Server
 ---------------
@@ -194,8 +198,8 @@ or wait for the server to become enabled.
     client.enable_server('app1.example.com', max_retries=0)
 
 You can set ``max_retries`` to any number that makes sense for your deploy process. Each
-retry will be attempted two seconds apart. See :class:`warthog.client.WarthogClient` for
-more information.
+retry will be attempted two seconds apart by default. See :class:`warthog.client.WarthogClient`
+for more information about how to change the time between retries.
 
 Non-Load Balanced Servers
 -------------------------
