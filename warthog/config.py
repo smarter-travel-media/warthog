@@ -216,5 +216,5 @@ class WarthogConfigLoader(object):
             if self._settings is None:
                 raise RuntimeError(
                     "Configuration file must be loaded and parsed before "
-                    "settings can be used (via the .initialize() method")
+                    "settings can be used (via the .initialize() method)")
             return self._settings
