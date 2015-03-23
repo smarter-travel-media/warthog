@@ -70,6 +70,7 @@ Contents
    lib
    cli
    dev
+   release
    changes
 
 Indices and tables

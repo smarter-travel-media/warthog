@@ -4,6 +4,7 @@ Change Log
 0.8.4 - Future release
 ----------------------
 * Replace examples documentation with more in depth usage guide (:doc:`usage`).
+* Add documentation for performing a release of the library (:doc:`release`).
 
 0.8.3 - 2015-03-18
 ------------------
