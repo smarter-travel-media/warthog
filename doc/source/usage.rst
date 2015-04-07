@@ -37,36 +37,15 @@ It might be the case that you use a self-signed certificate for HTTPS connection
 your load balancer. This isn't ideal, but hey, it happens. To this end, you can configure
 the Warthog library to connect over HTTPS but *not* to verify the SSL certificate.
 
-We'll have to create a few custom objects to pass to the client instance.
-
-Let's start by importing all the parts of the API that we'll need to do this.
-
-.. code-block:: python
-
-    from warthog.api import WarthogClient, CommandFactory, get_transport_factory
-
-Now, we'll create a factory for ``Session`` instances that don't perform SSL verification.
-You don't need to worry about what ``Session`` instances are, they're just an object to make
-a single HTTP request to the load balancer API.
+This can be easily accomplished by passing an extra argument to the client when
+creating it.
 
 .. code-block:: python
 
-    transport_factory = get_transport_factory(verify=False)
-
-Next, we use this factory object to create a ``CommandFactory``. A command factory
-creates commands that each perform a single operation through the load balancer API (enabling a
-server, disabling a server, etc.).
-
-.. code-block:: python
-
-    command_factory = CommandFactory(transport_factory)
-
-Finally, we create an instance of the ``WarthogClient`` that will use our custom ``CommandFactory``.
-
-.. code-block:: python
+    from warthog.api import WarthogClient
 
     client = WarthogClient(
-        'https://lb.example.com', 'deploy', 'my password', commands=command_factory)
+        'https://lb.example.com', 'deploy', 'my password', verify=False)
 
 
 Create a Client From a Configuration File
@@ -106,12 +85,8 @@ now.
 .. code-block:: python
 
     client = WarthogClient(
-        config_settings.scheme_host, config_settings.username, config_settings.password)
-
-Note that the ``config_settings`` struct has another field, ``verify``. This allows you to use
-the configuration file to determine if you want to verify SSL certificates. If you disable verification
-in this way, you'll have to follow the same process as above to create a custom ``CommandFactory``
-to use with the client.
+        config_settings.scheme_host, config_settings.username, config_settings.password,
+        verify=config_settings.verify)
 
 Disable a Server
 ----------------

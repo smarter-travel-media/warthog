@@ -120,15 +120,17 @@ class CommandFactory(object):
             self._transport_factory(), scheme_host, session_id, server)
 
 
-def _get_default_cmd_factory():
+def _get_default_cmd_factory(verify):
     """Get a :class:`CommandFactory` instance configured to use the TLS version
-    expected by the A10 when using https connections.
+    expected by the A10 when using HTTPS connections.
 
+    :param bool verify: ``True`` to perform certificate validation when using HTTPS,
+        ``False`` otherwise
     :return: Default command factory for building new commands to interact
         with the A10 load balancer
     :rtype: WarthogCommandFactory
     """
-    return CommandFactory(warthog.transport.get_transport_factory())
+    return CommandFactory(warthog.transport.get_transport_factory(verify=verify))
 
 
 @contextlib.contextmanager
@@ -168,24 +170,33 @@ class WarthogClient(object):
     _default_wait_interval = 2.0
 
     # pylint: disable=too-many-arguments
-    def __init__(self, scheme_host, username, password,
+    def __init__(self, scheme_host, username, password, verify=True,
                  wait_interval=_default_wait_interval, commands=None):
         """Set the load balancer scheme/host/port combination, username and password
         to use for connecting and authenticating with the load balancer.
 
-        Optionally, the amount of time to wait between retries of various operations
-        and the factory used for creating commands may be set.
+        Optionally, whether or not to verify certificates when using HTTPS may be
+        toggled. This can enable you to use a self signed certificate for the load
+        balancer while still using HTTPS.
 
-        If the interval between retries is not supplied, the default is two seconds.
+        Optionally, the amount of time to wait between retries of various operations
+        and the factory used for creating commands may be set. If the interval between
+        retries is not supplied, the default is two seconds.
 
         If the command factory is not supplied, a default instance will be used. The
-        command factory is also responsible for creating new :class:`requests.Session`
-        instances to be used by each command. The default configuration is to use
-        session instances that use TLSv1 for SSL connections and verify certificates.
+        command factory is responsible for creating new :class:`requests.Session` instances
+        to be used by each command. It is typically only necessary to override this for
+        unit testing purposes.
+
+        .. versionchanged:: 0.9.0
+            Added the optional ``verify`` parameter to make use of self-signed certs
+            easier.
 
         :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
         :param basestring username: Name of the user to authenticate with.
         :param basestring password: Password for the user to authenticate with.
+        :param bool verify: ``True`` to verify certificates when using HTTPS, ``False``
+            to skip verification. The default is to verify certificates.
         :param float wait_interval: How long (in seconds) to wait between each retry of
             various operations (waiting for nodes to transition, waiting for connections
             to close, etc.).
@@ -196,7 +207,7 @@ class WarthogClient(object):
         self._username = username
         self._password = password
         self._interval = wait_interval
-        self._commands = commands if commands is not None else _get_default_cmd_factory()
+        self._commands = commands if commands is not None else _get_default_cmd_factory(verify)
 
     def _session_context(self):
         """Get a new context manager that starts and ends a session with the load balancer."""

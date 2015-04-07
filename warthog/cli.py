@@ -103,15 +103,6 @@ def main(ctx, config):
         raise click.ClickException(six.text_type(e))
 
     settings = loader.get_settings()
-    factory = None
-
-    if not settings.verify:
-        # We only need a custom command factory if we've chosen not to
-        # verify certificates (since verifying them is the default). Note
-        # we don't allow the SSL version to be overridden. Doing so would
-        # be a little messy trying to parse so just don't do it.
-        transport = warthog.api.get_transport_factory(verify=False)
-        factory = warthog.api.CommandFactory(transport)
 
     # Wrap the client in a facade that translates expected errors into
     # exceptions that click will render as error messages for the user.
@@ -119,7 +110,7 @@ def main(ctx, config):
         settings.scheme_host,
         settings.username,
         settings.password,
-        commands=factory))
+        verify=settings.verify))
 
 
 @click.command()

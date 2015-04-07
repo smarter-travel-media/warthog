@@ -28,7 +28,8 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
 # Default to using the SSL/TLS version that the A10 requires instead of
-# the default that the requests/urllib3 library picks.
+# the default that the requests/urllib3 library picks. Or, maybe the A10
+# just doesn't allow the client to negotiate. Either way, we use TLSv1.
 DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
 
 
