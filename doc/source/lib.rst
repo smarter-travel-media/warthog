@@ -16,7 +16,7 @@ namespace. This allows a simple and consistent way to interact with the library.
 
 .. automodule:: warthog.client
     :special-members: __init__,__call__,__enter__,__exit__
-    :members: CommandFactory, WarthogClient
+    :members: WarthogClient, CommandFactory
     :undoc-members:
 
 .. automodule:: warthog.config
