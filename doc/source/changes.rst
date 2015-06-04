@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-0.9.0 - Future release
-----------------------
+0.9.0 - 2015-06-04
+------------------
 * Replace examples documentation with more in depth usage guide (:doc:`usage`).
 * Add documentation for performing a release of the library (:doc:`release`).
 * Move enabling/disabling certificate verification to the :class:`warthog.client.WarthogClient`
