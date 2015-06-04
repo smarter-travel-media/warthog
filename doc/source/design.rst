@@ -59,6 +59,11 @@ minor version number.
 Since this is a Python project, only the subset of the semantic versioning spec that is
 compatible with `PEP-440`_ will be used.
 
+Compatible and incompatible changes are defined in terms of use of the Python module
+``warthog.api`` and use of the CLI program ``warthog``. Meaning, code that makes use
+of the 1.0.0 version of ``warthog.api`` should not require any changes to make use of
+the 1.1.0 version of ``warthog.api``.
+
 .. _semantic versioning: http://semver.org/
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 
