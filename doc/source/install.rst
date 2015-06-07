@@ -22,8 +22,8 @@ Warthog depends on the following libraries / projects. If you have Python instal
 and use the pip_ tool for installation, these should be installed automatically.
 
 * Python 2.6 - 2.7 or Python 3.3 - Python 3.4
-* The Requests_ library (HTTP library)
-* The Click_ library (command line interface library)
+* The Requests_ library (HTTP library), version 2.6 or higher
+* The Click_ library (command line interface library), version 3.3 or higher
 
 Install from PyPI
 -----------------
