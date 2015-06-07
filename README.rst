@@ -56,7 +56,7 @@ See `the docs <https://warthog.readthedocs.org/>`_ for more information.
 Documentation
 -------------
 
-The latest documentation is available at https://warthog.readthedocs.org/
+The latest documentation is available at https://warthog.readthedocs.org/en/latest/
 
 Source
 ------
