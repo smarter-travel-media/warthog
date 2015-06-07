@@ -53,15 +53,20 @@ Using the client is easy!
 
 See `the docs <https://warthog.readthedocs.org/>`_ for more information.
 
-Code
-----
-
-The source code is available at https://github.com/smarter-travel-media/warthog
-
 Documentation
 -------------
 
-Documentation is available at https://warthog.readthedocs.org/
+The latest documentation is available at https://warthog.readthedocs.org/
+
+Source
+------
+
+The source code is available at https://github.com/smarter-travel-media/warthog
+
+Download
+--------
+
+Python packages are available at https://pypi.python.org/pypi/warthog
 
 Changes
 -------
