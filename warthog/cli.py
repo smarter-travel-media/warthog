@@ -77,18 +77,18 @@ class WarthogClientFacade(object):
 
 
 @click.group()
-@click.help_option('--help')
 @click.version_option(version=warthog.__version__)
 @click.option('--config', help='Path to a configuration file to use for the load balancer API', type=click.Path())
-@click.pass_context
-def main(ctx, config):
+def main(config):
     """Interact with a load balancer using the Warthog client."""
-    # Don't try to load config files or bootstrap the client if we're
-    # just running the command to dump a default configuration file for
-    # someone to customize or printing the config search path.
-    if ctx.invoked_subcommand in ('default-config', 'config-path'):
-        return
+    # We don't actually do anything with the config file argument at this point.
+    # The idea here is that we shouldn't be parsing the config file until we really
+    # need it (like when we're creating a client instance). This allows us to display
+    # help for subcommands without requiring the user to set up a config file first
+    # (which would be really annoying).
 
+
+def get_client(config):
     # Passing the config file unconditionally here since if the user hasn't
     # specified one it'll be None and the config loader will use the default
     # locations.
@@ -106,7 +106,7 @@ def main(ctx, config):
 
     # Wrap the client in a facade that translates expected errors into
     # exceptions that click will render as error messages for the user.
-    ctx.obj = WarthogClientFacade(warthog.api.WarthogClient(
+    return WarthogClientFacade(warthog.api.WarthogClient(
         settings.scheme_host,
         settings.username,
         settings.password,
@@ -118,7 +118,8 @@ def main(ctx, config):
 @click.pass_context
 def enable(ctx, server):
     """Enable a server by hostname."""
-    if not ctx.obj.enable_server(server):
+    client = get_client(ctx.parent.params['config'])
+    if not client.enable_server(server):
         click.echo('{0} could not be enabled'.format(server))
         ctx.exit(1)
 
@@ -128,7 +129,8 @@ def enable(ctx, server):
 @click.pass_context
 def disable(ctx, server):
     """Disable a server by hostname."""
-    if not ctx.obj.disable_server(server):
+    client = get_client(ctx.parent.params['config'])
+    if not client.disable_server(server):
         click.echo('{0} could not be disabled'.format(server))
         ctx.exit(1)
 
@@ -138,7 +140,8 @@ def disable(ctx, server):
 @click.pass_context
 def status(ctx, server):
     """Get the status of a server by hostname."""
-    click.echo(ctx.obj.get_status(server))
+    client = get_client(ctx.parent.params['config'])
+    click.echo(client.get_status(server))
 
 
 @click.command()
@@ -146,7 +149,8 @@ def status(ctx, server):
 @click.pass_context
 def connections(ctx, server):
     """Get active connections to a server by hostname."""
-    click.echo(ctx.obj.get_connections(server))
+    client = get_client(ctx.parent.params['config'])
+    click.echo(client.get_connections(server))
 
 
 @click.command('default-config')

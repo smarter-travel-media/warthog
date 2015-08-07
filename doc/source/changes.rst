@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+
+0.9.1 - Future release
+----------------------
+* Fix bug where a config file needed to be specified by the CLI client even when
+  not required (such has when displaying help). Fixes
+  `#3 <https://github.com/smarter-travel-media/warthog/issues/3>`_.
+
 0.9.0 - 2015-06-04
 ------------------
 * Replace examples documentation with more in depth usage guide (:doc:`usage`).
