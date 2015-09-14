@@ -4,7 +4,6 @@
 import uuid
 
 import codecs
-
 import os.path
 import pytest
 import mock
@@ -99,3 +98,37 @@ class TestWarthogConfigLoader(object):
         assert 'username' == settings.username
         assert 'password' == settings.password
         assert settings.verify
+
+
+class FakeModule(object):
+    """Class to wrap ``object`` so that we can set attributes on it
+    but still get attribute errors for properties that aren't set, unlike
+    :class:`mock.Mock` which will just hand back a mock instance
+    """
+
+
+def test_get_tls_version_valid_version():
+    mod = FakeModule()
+    mod.PROTOCOL_TLSv1 = 3
+    mod.PROTOCOL_TLSv1_1 = 4
+    mod.PROTOCOL_TLSv1_2 = 5
+
+    assert mod.PROTOCOL_TLSv1 == warthog.config.get_tls_version(u'TLSv1', mod)
+    assert mod.PROTOCOL_TLSv1_1 == warthog.config.get_tls_version(u'TLSv1_1', mod)
+    assert mod.PROTOCOL_TLSv1_2 == warthog.config.get_tls_version(u'TLSv1_2', mod)
+
+
+def test_get_tls_version_unsupported_version():
+    mod = FakeModule()
+    mod.PROTOCOL_TLSv1 = 3
+
+    assert None is warthog.config.get_tls_version(u'TLSv1_1', mod)
+    assert None is warthog.config.get_tls_version(u'TLSv1_2', mod)
+
+
+def test_get_tls_version_malformed_version():
+    mod = FakeModule()
+    mod.PROTOCOL_TLSv1 = 3
+
+    assert None is warthog.config.get_tls_version(u'SOMETHING', mod)
+    assert None is warthog.config.get_tls_version(u'', mod)

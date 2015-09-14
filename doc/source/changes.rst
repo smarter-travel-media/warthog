@@ -1,11 +1,18 @@
 Change Log
 ==========
 
+0.10.0 - Future release
+-----------------------
+* Add option to :class:`warthog.client.WarthogClient` to allow alternate SSL or TLS versions
+  to be used easily.
+* **Breaking change** - Passing a ``None`` value to :func:`warthog.transport.get_transport_factory`
+  for the ``ssl_version`` parameter will now use the Warthog library default (TLSv1) instead of
+  letting requests/urllib3 pick the default.
 
 0.9.1 - 2015-08-07
 ------------------
 * Fix bug where a config file needed to be specified by the CLI client even when
-  not required (such has when displaying help). Fixes
+  not required (such as when displaying help). Fixes
   `#3 <https://github.com/smarter-travel-media/warthog/issues/3>`_.
 
 0.9.0 - 2015-06-04

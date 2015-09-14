@@ -78,7 +78,11 @@ class WarthogClientFacade(object):
 
 @click.group()
 @click.version_option(version=warthog.__version__)
-@click.option('--config', help='Path to a configuration file to use for the load balancer API', type=click.Path())
+@click.option(
+    '--config',
+    help='Path to a configuration file to use for the load balancer API',
+    type=click.Path(dir_okay=False))
+# pylint: disable=unused-argument
 def main(config):
     """Interact with a load balancer using the Warthog client."""
     # We don't actually do anything with the config file argument at this point.
@@ -89,6 +93,7 @@ def main(config):
 
 
 def get_client(config):
+    """Construct a new wrapped client based on the specified config file."""
     # Passing the config file unconditionally here since if the user hasn't
     # specified one it'll be None and the config loader will use the default
     # locations.

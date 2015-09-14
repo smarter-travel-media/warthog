@@ -21,3 +21,12 @@ def test_get_transport_factory_alternate_ssl_version():
     adapter = session.get_adapter('https://lb.example.com')
 
     assert ssl.PROTOCOL_SSLv3 == adapter.ssl_version, 'Did not get expected SSL version'
+
+
+def test_get_transport_factory_with_defaults():
+    factory = warthog.transport.get_transport_factory(verify=None, ssl_version=None)
+    session = factory()
+    adapter = session.get_adapter('https://lb.example.com')
+
+    assert warthog.transport.DEFAULT_SSL_VERSION == adapter.ssl_version, 'Did not get default TLS version'
+    assert warthog.transport.DEFAULT_CERT_VERIFY == session.verify, 'Did not get default verify setting'

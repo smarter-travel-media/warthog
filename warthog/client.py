@@ -120,17 +120,21 @@ class CommandFactory(object):
             self._transport_factory(), scheme_host, session_id, server)
 
 
-def _get_default_cmd_factory(verify):
-    """Get a :class:`CommandFactory` instance configured to use the TLS version
-    expected by the A10 when using HTTPS connections.
+def _get_default_cmd_factory(verify, ssl_version):
+    """Get a :class:`CommandFactory` instance configured to use the provided TLS
+    version and cert verification policy
 
     :param bool verify: ``True`` to perform certificate validation when using HTTPS,
-        ``False`` otherwise
+        ``False`` otherwise, ``None`` to use the default.
+    :param int ssl_version: :mod:`ssl` module constant for specifying which SSL or
+        TLS version to use for connecting to the load balancer over HTTPS, ``None``
+        to use the default.
     :return: Default command factory for building new commands to interact
-        with the A10 load balancer
+        with the A10 load balancer.
     :rtype: WarthogCommandFactory
     """
-    return CommandFactory(warthog.transport.get_transport_factory(verify=verify))
+    return CommandFactory(warthog.transport.get_transport_factory(
+        verify=verify, ssl_version=ssl_version))
 
 
 @contextlib.contextmanager
@@ -170,14 +174,20 @@ class WarthogClient(object):
     _default_wait_interval = 2.0
 
     # pylint: disable=too-many-arguments
-    def __init__(self, scheme_host, username, password, verify=True,
-                 wait_interval=_default_wait_interval, commands=None):
+    def __init__(self, scheme_host, username, password,
+                 verify=None,
+                 ssl_version=None,
+                 wait_interval=_default_wait_interval,
+                 commands=None):
         """Set the load balancer scheme/host/port combination, username and password
         to use for connecting and authenticating with the load balancer.
 
         Optionally, whether or not to verify certificates when using HTTPS may be
         toggled. This can enable you to use a self signed certificate for the load
         balancer while still using HTTPS.
+
+        Optionally, the version of SSL or TLS to use may be specified as a :mod:`ssl`
+        module protocol constant.
 
         Optionally, the amount of time to wait between retries of various operations
         and the factory used for creating commands may be set. If the interval between
@@ -192,11 +202,19 @@ class WarthogClient(object):
             Added the optional ``verify`` parameter to make use of self-signed certs
             easier.
 
+        .. versionchanged:: 0.10.0
+            Added the optional ``ssl_version`` parameter to make use of alternate SSL
+            or TLS versions easier.
+
         :param basestring scheme_host: Scheme, host, and port combination of the load balancer.
         :param basestring username: Name of the user to authenticate with.
         :param basestring password: Password for the user to authenticate with.
-        :param bool verify: ``True`` to verify certificates when using HTTPS, ``False``
-            to skip verification. The default is to verify certificates.
+        :param bool|None verify: ``True`` to verify certificates when using HTTPS, ``False``
+            to skip verification, ``None`` to use the library default. The default is to
+            verify certificates.
+        :param int|None ssl_version: :mod:`ssl` module constant for specifying which version of
+            SSL or TLS to use when connecting to the load balancer over HTTPS, ``None`` to use
+            the library default. The default is to use TLSv1.
         :param float wait_interval: How long (in seconds) to wait between each retry of
             various operations (waiting for nodes to transition, waiting for connections
             to close, etc.).
@@ -207,7 +225,8 @@ class WarthogClient(object):
         self._username = username
         self._password = password
         self._interval = wait_interval
-        self._commands = commands if commands is not None else _get_default_cmd_factory(verify)
+        self._commands = commands if commands is not None else \
+            _get_default_cmd_factory(verify, ssl_version)
 
     def _session_context(self):
         """Get a new context manager that starts and ends a session with the load balancer."""

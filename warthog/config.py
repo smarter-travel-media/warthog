@@ -16,8 +16,10 @@ Load and parse configuration for a client from an INI-style file.
 
 import collections
 import threading
+import ssl
 import sys
 
+import re
 import codecs
 import os.path
 import warthog.exceptions
@@ -36,6 +38,7 @@ DEFAULT_CONFIG_LOCATIONS = [
     os.path.join(os.path.expanduser('~'), '.warthog.ini'),
     os.path.join(os.getcwd(), 'warthog.ini')
 ]
+
 
 # By default, we assume that the configuration file is in UTF-8 unless
 # the caller indicates it is in some other encoding.
@@ -218,3 +221,26 @@ class WarthogConfigLoader(object):
                     "Configuration file must be loaded and parsed before "
                     "settings can be used (via the .initialize() method)")
             return self._settings
+
+
+def get_tls_version(version_str, ssl_module=None):
+    """Get the :mod:`ssl` protocol constant that represents the given version
+    string if it exists, ``None`` if the version string is malformed or does
+    not correspond to a supported protocol.
+
+    .. note::
+        Only TLS versions are supported, not SSL.
+
+    :param unicode version_str: Version string to resolve to a protocol
+    :param module ssl_module: SSL module to get the protocol constant from
+    :return: The ssl module protocol constant or ``None``
+    """
+    if not version_str:
+        return None
+
+    tls_match = re.match('^TLSv([\d_]+)', version_str)
+    if tls_match is None:
+        return None
+
+    ssl_module = ssl_module if ssl_module is not None else ssl
+    return getattr(ssl_module, 'PROTOCOL_TLSv' + tls_match.group(1), None)

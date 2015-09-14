@@ -48,6 +48,23 @@ creating it.
         'https://lb.example.com', 'deploy', 'my password', verify=False)
 
 
+Create a Client With an Alternate SSL/TLS Version
+-------------------------------------------------
+
+If you need to use an alternate version of SSL or TLS to interact with your load balancer
+over HTTPS, you can accomplish this by just passing an extra argument to the client when
+creating it.
+
+.. code-block:: python
+
+    import ssl
+    from warthog.api import WarthogClient
+
+    client = WarthogClient(
+        'https://lb.example.com', 'deploy', 'my password', ssl_version=ssl.PROTOCOL_TLSv1_2)
+
+
+
 Create a Client From a Configuration File
 -----------------------------------------
 
