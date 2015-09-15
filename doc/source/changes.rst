@@ -8,6 +8,8 @@ Changelog
 * **Breaking change** - Passing a ``None`` value to :func:`warthog.transport.get_transport_factory`
   for the ``ssl_version`` parameter will now use the Warthog library default (TLSv1) instead of
   letting requests/urllib3 pick the default.
+* Add support for specifying an optional ``ssl_version`` parameter in INI configuration files.
+* Change ``verify`` to be optional in INI configuration files.
 
 0.9.1 - 2015-08-07
 ------------------

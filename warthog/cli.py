@@ -166,7 +166,8 @@ def default_config():
         'scheme_host = https://lb.example.com',
         'username = username',
         'password = password',
-        'verify = yes'
+        'verify = yes',
+        'ssl_version = TLSv1'
     ]))
 
 

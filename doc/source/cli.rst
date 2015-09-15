@@ -176,7 +176,8 @@ client needs a few pieces of information.
 * The username it should use for authentication with the load balancer.
 * The password associated with the username it should use.
 * Whether or not SSL certificates should be validated (similar to how your browser validates
-  them).
+  them) if using HTTPS.
+* The version of SSL / TLS to use if using HTTPS.
 
 Syntax
 ~~~~~~
@@ -190,6 +191,7 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
     username = username
     password = password
     verify = yes
+    ssl_version = TLSv1
 
 .. tabularcolumns:: |l|l|
 
@@ -211,7 +213,20 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
                           recognized by the Python INI parser_. Examples of valid true values
                           include ``1``, ``yes``, ``true``, and ``on``. Examples of valid false
                           values include ``0``, ``no``, ``false``, and ``off``.
+``ssl_version``           SSL / TLS version to use when connecting to the load balancer over
+                          HTTPS. This version must be supported by your Python install (i.e.
+                          there must be a PROTOCOL constant corresponding to it in :mod:`ssl`).
+                          Potential supported values are ``SSLv23``, ``TSLv1``, ``TLSv1_1``, or
+                          ``TLSv1_2``.
 ========================= =======================================================================
+
+.. versionchanged:: 0.10.0
+    The ``verify`` parameter is now optional. If not specified the Warthog library default
+    will be used (``True`` to verify certificates).
+
+.. versionchanged:: 0.10.0
+    The ``ssl_version`` parameter is now supported and optional. If not specified the Warthog
+    library default will be used (TLSv1).
 
 Location
 ~~~~~~~~

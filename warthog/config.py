@@ -19,7 +19,6 @@ import threading
 import ssl
 import sys
 
-import re
 import codecs
 import os.path
 import warthog.exceptions
@@ -47,7 +46,7 @@ DEFAULT_CONFIG_ENCODING = 'utf-8'
 
 # Simple immutable struct to hold configuration information for a WarthogClient
 WarthogConfigSettings = collections.namedtuple(
-    'WarthogConfigSettings', ['scheme_host', 'username', 'password', 'verify'])
+    'WarthogConfigSettings', ['scheme_host', 'username', 'password', 'verify', 'ssl_version'])
 
 
 class WarthogConfigLoader(object):
@@ -57,10 +56,6 @@ class WarthogConfigLoader(object):
     be used instead of checking the multiple possible default locations for configuration
     files. The default locations to be checked are an ordered list of paths contained
     in :data:`DEFAULT_CONFIG_LOCATIONS`.
-
-    If a INI configuration parser instance is given during construction, this instance
-    will be used to load and parse the configuration file. If not given, an instance
-    of a :class:`configparser.SafeConfigParser` from the standard library will be used.
 
     .. note::
 
@@ -78,108 +73,51 @@ class WarthogConfigLoader(object):
     .. versionchanged:: 0.6.0
         The .parse_configuration() method has been removed and the functionality has
         been split into the .initialize() and .get_settings() methods.
+
+    .. versionchanged:: 0.10.0
+        The :meth:`WarthogConfigLoader.__init__` method no longer directly takes a standard
+        library INI parser as an option parameter, instead it now takes a WarthogConfigParser
+        instance as an optional parameter.
+
+    .. versionchanged:: 0.10.0
+        See :doc:`changes` or :doc:`cli` for details about the changes to configuration
+        file format.
     """
 
-    def __init__(self, config_file=None, config_parser=None, encoding=DEFAULT_CONFIG_ENCODING):
-        """Optionally, set a specific configuration file, parser for the file, and
-        the encoding of the file.
+    def __init__(self, config_file=None, encoding=None, path_resolver=None, config_parser=None):
+        """Optionally, set a specific configuration file, the encoding of the file, resolver
+        to determine the configuration file to use, and custom configuration parser implementation.
 
-        By default, multiple locations will be checked for a configuration file, an INI
-        configuration parser from the standard library will be used, and the file is
-        assumed to use UTF-8 encoding.
+        By default, multiple locations will be checked for a configuration file, the file
+        is assumed to use UTF-8 encoding, and an
 
-        :param basestring config_file: Optional explicit path to a configuration file
+        :param str|unicode config_file: Optional explicit path to a configuration file
             to use.
-        :param configparser.RawConfigParser config_parser: Optional configuration parser
-            instance to use for reading and parsing a configuration file instead of
-            the default parser (one of the INI parser from the standard library).
-        :param basestring encoding: Encoding to use for reading the configuration file.
+        :param str|unicode encoding: Encoding to use for reading the configuration file.
             Default is UTF-8
+        :param callable path_resolver: Callable that accepts a single argument (the explicit
+            configuration file path to use) and determines what configuration file to use. It
+            is typically only necessary to set this parameter for unit testing purposes.
+        :param WarthogConfigParser config_parser: Optional configuration parser to use for
+            reading and parsing the expected INI format for a Warthog configuration file. It
+            is typically only necessary to set this parameter for unit testing purposes.
         """
         self._config_file = config_file
-        self._config_parser = config_parser
-        self._encoding = encoding
+        self._encoding = encoding if encoding is not None else DEFAULT_CONFIG_ENCODING
+
+        self._path_resolver = path_resolver if path_resolver is not None else \
+            WarthogConfigFileResolver(DEFAULT_CONFIG_LOCATIONS)
+
+        self._parser = config_parser if config_parser is not None else \
+            WarthogConfigParser(configparser.SafeConfigParser())
+
         self._lock = threading.RLock()
         self._settings = None
-
-    def _get_config_file(self):
-        """Get a tuple of the configuration file that should be used and the list
-        of locations checked to attempt to find the correct file. If no config file
-        could be found the first element will be None, the second element will still
-        be the list of locations searched.
-        """
-        if self._config_file is not None:
-            return self._config_file, [self._config_file]
-
-        for location in DEFAULT_CONFIG_LOCATIONS:
-            if os.path.exists(location):
-                return location, DEFAULT_CONFIG_LOCATIONS
-
-        return None, DEFAULT_CONFIG_LOCATIONS
-
-    # pylint: disable=missing-docstring
-    def _get_config_parser(self):
-        if self._config_parser is not None:
-            return self._config_parser
-        return configparser.SafeConfigParser()
-
-    # pylint: disable=missing-docstring
-    def _parse_config_file(self):
-        config_file, checked = self._get_config_file()
-        config_parser = self._get_config_parser()
-
-        if config_file is None:
-            raise warthog.exceptions.WarthogNoConfigFileError(
-                "No configuration file was specified. Please set a "
-                "configuration file or ensure that a configuration "
-                "file exists in one of the default locations checked",
-                locations_checked=checked)
-
-        try:
-            with codecs.open(config_file, 'r', encoding=self._encoding) as handle:
-                config_parser.readfp(handle)
-        except IOError as e:
-            six.reraise(
-                warthog.exceptions.WarthogNoConfigFileError,
-                warthog.exceptions.WarthogNoConfigFileError(
-                    "The configuration file does not exist or could not read. "
-                    "Please make sure {0} exists and can be read by the current "
-                    "user. Original error message: {1}".format(config_file, e),
-                    locations_checked=checked),
-                sys.exc_info()[2])
-        except UnicodeError as e:
-            six.reraise(
-                warthog.exceptions.WarthogMalformedConfigFileError,
-                warthog.exceptions.WarthogMalformedConfigFileError(
-                    "The configuration file {0} doesn't seem to be correctly encoded "
-                    "{1} text. Please ensure that the file is valid text. Original "
-                    "error message: {2}".format(config_file, self._encoding, e)),
-                sys.exc_info()[2])
-
-        try:
-            scheme_host = config_parser.get('warthog', 'scheme_host')
-            username = config_parser.get('warthog', 'username')
-            password = config_parser.get('warthog', 'password')
-            verify = config_parser.getboolean('warthog', 'verify')
-        except configparser.NoSectionError as e:
-            raise warthog.exceptions.WarthogMalformedConfigFileError(
-                "The configuration file seems to be missing a '{0}' section. Please "
-                "make sure this section exists".format(e.section), missing_section=e.section)
-        except configparser.NoOptionError as e:
-            raise warthog.exceptions.WarthogMalformedConfigFileError(
-                "The configuration file seems to be missing the '{0}' option. Please "
-                "make sure this option exists".format(e.option), missing_option=e.option)
-
-        return WarthogConfigSettings(
-            scheme_host=scheme_host,
-            username=username,
-            password=password,
-            verify=verify)
 
     def initialize(self):
         """Load and parse a configuration an INI-style configuration file.
 
-        The values parsed will be stored as a :class:`WarthogClientConfig` instance that
+        The values parsed will be stored as a :class:`WarthogConfigSettings` instance that
         may be accessed with the :meth:`get_settings` method.
 
         .. versionadded:: 0.6.0
@@ -201,7 +139,8 @@ class WarthogConfigLoader(object):
             expected configuration settings.
         """
         with self._lock:
-            self._settings = self._parse_config_file()
+            config_file, checked = self._path_resolver(self._config_file)
+            self._settings = self._parser.parse(config_file, self._encoding, checked)
         return self
 
     def get_settings(self):
@@ -223,24 +162,171 @@ class WarthogConfigLoader(object):
             return self._settings
 
 
-def get_tls_version(version_str, ssl_module=None):
+def parse_ssl_version(version_str, ssl_module=None):
     """Get the :mod:`ssl` protocol constant that represents the given version
-    string if it exists, ``None`` if the version string is malformed or does
-    not correspond to a supported protocol.
-
-    .. note::
-        Only TLS versions are supported, not SSL.
+    string if it exists, raising an error if the version string is malformed or
+    does not correspond to a supported protocol.
 
     :param unicode version_str: Version string to resolve to a protocol
     :param module ssl_module: SSL module to get the protocol constant from
     :return: The ssl module protocol constant or ``None``
+    :raises ValueError: If the version string did not match any known versions
+        of SSL or TLS
     """
+    if version_str is None:
+        return None
+
+    version_str = version_str.strip()
     if not version_str:
         return None
 
-    tls_match = re.match('^TLSv([\d_]+)', version_str)
-    if tls_match is None:
+    ssl_module = ssl_module if ssl_module is not None else ssl
+
+    # Get a list of all the 'PROTOCOL' constants in the SSL module, and
+    # strip the 'PROTOCOL_' prefix. This is the set of supported SSL or
+    # TLS versions that we'll compare the user input against.
+    supported = set([const.replace('PROTOCOL_', '', 1) for const in dir(ssl_module)
+                     if const.startswith('PROTOCOL_')])
+
+    if version_str in supported:
+        return getattr(ssl_module, 'PROTOCOL_' + version_str)
+
+    raise ValueError(
+        "Unsupported SSL/TLS version '" + version_str + "'. Supported: " + ', '.join(supported))
+
+
+class WarthogConfigFileResolver(object):
+    """Callable that returns a tuple of the form $path, $searched where
+     $path is the configuration file that should be used or None (if there
+     were no suitable files found) and $searched is a list of all paths that
+     were checked to find a suitable file.
+
+     If a configuration file was explicitly provided, it will be used without
+     checking any of the default locations. If no file was explicitly provided
+     each of the default locations will be checked to find one configuration
+     file that exists.
+
+     If no suitable file could be found, the callable will return the tuple
+     ``None``, $searched where $searched is the list of locations checked.
+    """
+
+    def __init__(self, default_locations, exists_impl=None):
+        self._default_locations = default_locations
+        self._exists_impl = exists_impl if exists_impl is not None else os.path.exists
+
+    def __call__(self, path):
+        if path is not None:
+            return path, [path]
+
+        for default in self._default_locations:
+            if self._exists_impl(default):
+                return default, self._default_locations
+
+        return None, self._default_locations
+
+
+class WarthogConfigParser(object):
+    """Facade for a standard library INI file parser that parses the expected
+    configuration values for configuring a :class:`warthog.client.WarthogClient`
+    instance.
+
+    All configuration values are expected to be in the ``warthog`` section of
+    the INI file. The ``ssl_version`` value is not required, all others are.
+
+    This class is not thread safe.
+    """
+
+    def __init__(self, parser_impl, open_impl=None):
+        """Set the underlying standard library INI parser to use for reading
+        Warthog configuration settings.
+
+        :param configparser.RawConfigParser parser_impl: INI file parser to use
+            for parsing Warthog configuration settings.
+        :param callable open_impl: Open method for opening the configuration
+            file. The method is expected to have the same signature as
+            :func:`codes.open`. Callers should only need to supply this for unit
+            testing purposes.
+        """
+        self._parser_impl = parser_impl
+        self._open_impl = open_impl if open_impl is not None else codecs.open
+
+    def _load_file(self, path, encoding, checked):
+        """Open and load the configuration file at the given path."""
+        if path is None:
+            raise warthog.exceptions.WarthogNoConfigFileError(
+                "No configuration file was specified. Please set a "
+                "configuration file or ensure that a configuration "
+                "file exists in one of the default locations checked",
+                locations_checked=checked)
+
+        try:
+            with self._open_impl(path, 'r', encoding=encoding) as handle:
+                self._parser_impl.readfp(handle)
+        except IOError as e:
+            six.reraise(
+                warthog.exceptions.WarthogNoConfigFileError,
+                warthog.exceptions.WarthogNoConfigFileError(
+                    "The configuration file does not exist or could not read. "
+                    "Please make sure {0} exists and can be read by the current "
+                    "user. Original error message: {1}".format(path, e),
+                    locations_checked=checked),
+                sys.exc_info()[2])
+        except UnicodeError as e:
+            six.reraise(
+                warthog.exceptions.WarthogMalformedConfigFileError,
+                warthog.exceptions.WarthogMalformedConfigFileError(
+                    "The configuration file {0} doesn't seem to be correctly encoded "
+                    "{1} text. Please ensure that the file is valid text. Original "
+                    "error message: {2}".format(path, encoding, e)),
+                sys.exc_info()[2])
+
+    def _get_ssl_version(self, section, option):
+        """Get the specified TLS version in the config file or None."""
+        if self._parser_impl.has_option(section, option):
+            return parse_ssl_version(self._parser_impl.get(section, option))
         return None
 
-    ssl_module = ssl_module if ssl_module is not None else ssl
-    return getattr(ssl_module, 'PROTOCOL_TLSv' + tls_match.group(1), None)
+    def _get_verify(self, section, option):
+        """Get the certificate verify option in the config file or None."""
+        if self._parser_impl.has_option(section, option):
+            return self._parser_impl.getboolean(section, option)
+        return None
+
+    def _parse_file(self):
+        """Parse the opened configuration file and return the results as a namedtuple."""
+        try:
+            scheme_host = self._parser_impl.get('warthog', 'scheme_host')
+            username = self._parser_impl.get('warthog', 'username')
+            password = self._parser_impl.get('warthog', 'password')
+            verify = self._get_verify('warthog', 'verify')
+            ssl_version = self._get_ssl_version('warthog', 'ssl_version')
+        except configparser.NoSectionError as e:
+            raise warthog.exceptions.WarthogMalformedConfigFileError(
+                "The configuration file seems to be missing a '{0}' section. Please "
+                "make sure this section exists".format(e.section), missing_section=e.section)
+        except configparser.NoOptionError as e:
+            raise warthog.exceptions.WarthogMalformedConfigFileError(
+                "The configuration file seems to be missing the '{0}' option. Please "
+                "make sure this option exists".format(e.option), missing_option=e.option)
+
+        return WarthogConfigSettings(
+            scheme_host=scheme_host,
+            username=username,
+            password=password,
+            verify=verify,
+            ssl_version=ssl_version)
+
+    def parse(self, path, encoding, checked):
+        """Attempt to open and parse the configuration file at the given
+        path.
+
+        :param str|unicode path: Path to the configuration file to parse.
+        :param str|unicode encoding: Encoding to use when opening the file.
+        :param list checked: List of the various locations checked before
+            deciding on the configuration file to open.
+        :return: The parsed configuration settings to use for creating a client.
+        :rtype: WarthogConfigSettings
+        """
+
+        self._load_file(path, encoding, checked)
+        return self._parse_file()
