@@ -231,7 +231,8 @@ class WarthogConfigParser(object):
     instance.
 
     All configuration values are expected to be in the ``warthog`` section of
-    the INI file. The ``ssl_version`` value is not required, all others are.
+    the INI file. The ``ssl_version`` and ``verify`` values are not required, all
+    others are.
 
     This class is not thread safe.
     """
