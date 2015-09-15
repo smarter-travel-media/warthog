@@ -103,7 +103,7 @@ now.
 
     client = WarthogClient(
         config_settings.scheme_host, config_settings.username, config_settings.password,
-        verify=config_settings.verify)
+        verify=config_settings.verify, ssl_version=config_settings.ssl_version)
 
 Disable a Server
 ----------------

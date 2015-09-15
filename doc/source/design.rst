@@ -42,9 +42,8 @@ SSL
 
 The Warthog library supports interacting with a load balancer over HTTPS. By default
 when using SSL, certificates will be verified_, and TSLv1 will be explicitly used. If
-you wish to override either of these, you can do so with the
-:func:`warthog.transport.get_transport_factory` function. See the :mod:`ssl` module
-for available SSL versions.
+you wish to override either of these, you can do so when using the
+:class:`warthog.client.WarthogClient` or in your configuration file.
 
 .. _verified: http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
 
