@@ -200,13 +200,14 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
                           and port number. This is used to connect to the load balancer. Some
                           examples of valid values: ``http://10.1.2.3:8080``,
                           ``https://10.1.2.3:8443``, ``https://lb.example.com:8443``, or
-                          ``http://lb.example.com``.
+                          ``http://lb.example.com``. This setting is required.
 
 ``username``              The username to use for authentication with the load balancer. Some
-                          examples of valid values: ``admin``, ``deploy``, ``svc``.
+                          examples of valid values: ``admin``, ``deploy``, ``svc``. This
+                          setting is required.
 
 ``password``              Password to use along with the username for authentication with the
-                          load balancer.
+                          load balancer. This setting is required.
 
 ``verify``                If connecting to the load balancer over HTTPS, boolean to indicate if
                           the SSL certificate should be validated. This may be any boolean value
