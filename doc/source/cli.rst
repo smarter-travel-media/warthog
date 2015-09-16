@@ -142,6 +142,7 @@ Commands
         username = username
         password = password
         verify = yes
+        ssl_version = TLSv1
 
 
 .. cmdoption:: config-path
