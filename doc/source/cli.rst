@@ -212,12 +212,13 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
                           the SSL certificate should be validated. This may be any boolean value
                           recognized by the Python INI parser_. Examples of valid true values
                           include ``1``, ``yes``, ``true``, and ``on``. Examples of valid false
-                          values include ``0``, ``no``, ``false``, and ``off``.
+                          values include ``0``, ``no``, ``false``, and ``off``. This setting is
+                          optional.
 ``ssl_version``           SSL / TLS version to use when connecting to the load balancer over
                           HTTPS. This version must be supported by your Python install (i.e.
                           there must be a PROTOCOL constant corresponding to it in :mod:`ssl`).
                           Potential supported values are ``SSLv23``, ``TSLv1``, ``TLSv1_1``, or
-                          ``TLSv1_2``.
+                          ``TLSv1_2``. This setting is optional.
 ========================= =======================================================================
 
 .. versionchanged:: 0.10.0
