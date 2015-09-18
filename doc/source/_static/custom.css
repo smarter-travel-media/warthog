@@ -8,3 +8,7 @@
 .wy-table-responsive {
     overflow: visible !important;
 }
+
+.versionmodified {
+    font-style: italic;
+}
