@@ -4,11 +4,12 @@ Changelog
 0.10.0 - Future release
 -----------------------
 * Add option to :class:`warthog.client.WarthogClient` to allow alternate SSL or TLS versions
-  to be used easily.
+  to be used easily. Fixes `#6 <https://github.com/smarter-travel-media/warthog/issues/6>`_.
 * **Breaking change** - Passing a ``None`` value to :func:`warthog.transport.get_transport_factory`
   for the ``ssl_version`` parameter will now use the Warthog library default (TLSv1) instead of
   letting requests/urllib3 pick the default.
 * Add support for specifying an optional ``ssl_version`` parameter in INI configuration files.
+  Fixes `#4 <https://github.com/smarter-travel-media/warthog/issues/4>`_.
 * Change ``verify`` to be optional in INI configuration files.
 
 0.9.1 - 2015-08-07
