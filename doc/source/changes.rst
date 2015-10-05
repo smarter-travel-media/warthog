@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.10.0 - Future release
------------------------
+0.10.0 - 2015-10-05
+-------------------
 * Add option to :class:`warthog.client.WarthogClient` to allow alternate SSL or TLS versions
   to be used easily. Fixes `#6 <https://github.com/smarter-travel-media/warthog/issues/6>`_.
 * **Breaking change** - Passing a ``None`` value to :func:`warthog.transport.get_transport_factory`
