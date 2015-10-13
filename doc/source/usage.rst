@@ -275,6 +275,37 @@ You can see above that:
   enable it after deploying.
 * If the server was *enabled* when we found it, we disabled it before deploying and enabled it afterwards.
 
+
+Suppressing SSL Warnings on older Python Versions
+-------------------------------------------------
+
+.. warning::
+
+    Disabling SSL warnings is done at your own risk.
+
+Warthog depends on the `Requests`_ HTTP library. The Requests library in turn uses the `Urllib3`_ library.
+If you are using Warthog on Python 2.6 or a version of Python 2.7 prior to 2.7.9, Urllib3 will emit warnings
+due to a missing SSL-related class. While this is a legitimate warning, it may be the case that you can't
+upgrade the Python version you are using and would rather not deal with the warning output. If that's the
+case, you can do something like the following.
+
+.. code-block:: python
+
+    import warnings
+    from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+
+    warnings.filterwarnings("ignore", category=InsecurePlatformWarning)
+
+    from warthog.api import WarthogClient
+
+    client = WarthogClient('https://lb.example.com', 'deploy', 'my password')
+
+You can find more documentation about the implications of this in the `urllib3 docs`_.
+
+.. _Requests: http://docs.python-requests.org/en/latest/
+.. _Urllib3: https://urllib3.readthedocs.org/en/latest/
+.. _urllib3 docs: https://urllib3.readthedocs.org/en/latest/security.html
+
 Summary
 -------
 
