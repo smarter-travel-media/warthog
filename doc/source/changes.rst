@@ -1,6 +1,12 @@
 Changelog
 =========
 
+
+1.0.0 - 2015-12-21
+------------------
+* This is the first stable release of Warthog. From this point on, all breaking changes will only
+  be made in major version releases. This release is functionally the same as the ``0.10.0`` release.
+
 0.10.0 - 2015-10-05
 -------------------
 * Add option to :class:`warthog.client.WarthogClient` to allow alternate SSL or TLS versions
