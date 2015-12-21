@@ -24,7 +24,7 @@ DESCRIPTION = 'Simple client for A10 load balancers'
 URL = 'https://github.com/smarter-travel-media/warthog'
 LICENSE = 'MIT'
 CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX",
     "Programming Language :: Python",
