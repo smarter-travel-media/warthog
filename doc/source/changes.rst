@@ -2,6 +2,13 @@ Changelog
 =========
 
 
+1.1.0 - ????-??-??
+------------------
+* Disable ``InsecurePlatformWarning`` from urllib3 by default for the CLI client since this makes
+  it unusable CentOS / Red Hat 6. This warning can be re-enabled for the CLI client with the
+  ``--enable-platform-warning`` flag. Note that this does not change the behavior of the Warthog
+  library at all, only the CLI client. Fixes `#5 <https://github.com/smarter-travel-media/warthog/issues/5>`_.
+
 1.0.0 - 2015-12-21
 ------------------
 * This is the first stable release of Warthog. From this point on, all breaking changes will only

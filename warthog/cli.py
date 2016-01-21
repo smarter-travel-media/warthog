@@ -14,9 +14,7 @@ warthog.cli
 CLI interface for interacting with a load balancer using the Warthog client.
 """
 import functools
-
 import os
-
 import os.path
 import click
 import warthog
@@ -80,16 +78,27 @@ class WarthogClientFacade(object):
 @click.version_option(version=warthog.__version__)
 @click.option(
     '--config',
-    help='Path to a configuration file to use for the load balancer API',
+    help='Path to a configuration file to use for the load balancer API.',
     type=click.Path(dir_okay=False))
+@click.option(
+    '--enable-platform-warning',
+    help=('Enable warnings from underlying libraries when running on older Python '
+          'versions known to cause intermittent failures of SSL/TLS connections.'),
+    is_flag=True)
 # pylint: disable=unused-argument
-def main(config):
+def main(config, enable_platform_warning):
     """Interact with a load balancer using the Warthog client."""
     # We don't actually do anything with the config file argument at this point.
     # The idea here is that we shouldn't be parsing the config file until we really
     # need it (like when we're creating a client instance). This allows us to display
     # help for subcommands without requiring the user to set up a config file first
     # (which would be really annoying).
+
+    # Unless the user has specifically asked for this warning, we disable it because
+    # it makes the CLI unusable on Python 2.6 or Python 2.7 < 2.7.9 (which is what CentOS
+    # runs ATM).
+    if not enable_platform_warning:
+        disable_platform_warning()
 
 
 def get_client(config):
@@ -116,6 +125,18 @@ def get_client(config):
         settings.username,
         settings.password,
         verify=settings.verify))
+
+
+def disable_platform_warning():
+    """Disable the InsecurePlatformWarning emitted by urllib3. This is the
+    default behavior unless the caller specifically asks for these warnings.
+
+    See https://github.com/smarter-travel-media/warthog/issues/5
+    """
+    import warnings
+    from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+
+    warnings.filterwarnings("ignore", category=InsecurePlatformWarning)
 
 
 @click.command()
