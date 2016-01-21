@@ -64,6 +64,12 @@ information about a specific command, use the ``--help`` option with that comman
     instead of relying on the multiple default locations that are searched. If
     this option is specified all other potential locations for files are ignored.
 
+.. cmdoption:: --enable-platform-warning
+
+    Enable warnings from underlying libraries when running on older Python versions
+    (2.6 or 2.7 < 2.7.9) known to cause intermittent failures of SSL/TLS connections.
+    The default is to suppress these warnings.
+
 Commands
 --------
 
