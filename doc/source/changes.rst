@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.1.0 - ????-??-??
+1.1.0 - 2016-01-21
 ------------------
 * Disable ``InsecurePlatformWarning`` from urllib3 by default for the CLI client since this makes
   it unusable CentOS / Red Hat 6. This warning can be re-enabled for the CLI client with the
