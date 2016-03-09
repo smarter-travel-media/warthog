@@ -4,6 +4,9 @@ Warthog
 .. image:: https://travis-ci.org/smarter-travel-media/warthog.png?branch=master
     :target: https://travis-ci.org/smarter-travel-media/warthog
 
+.. image:: https://img.shields.io/pypi/v/warthog.svg
+    :target: https://pypi.python.org/pypi/warthog
+
 Warthog is a simple Python client for interacting with A10 load balancers. The target
 use case is for safely removing servers from pools in a load balancer during a deployment.
 It is available under the MIT license.
