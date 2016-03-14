@@ -2,7 +2,7 @@ include LICENSE MANIFEST.in README.rst requirements.txt requirements-dev.txt
 recursive-include doc/source *
 recursive-exclude dist *
 recursive-exclude build *
-recursive-exclude avalonms.egg-info *
+recursive-exclude warthog.egg-info *
 global-exclude *~
 global-exclude *.tmp
 global-exclude *.bak
