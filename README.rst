@@ -57,7 +57,7 @@ See `the docs <https://warthog.readthedocs.org/>`_ for more information.
 Documentation
 -------------
 
-The latest documentation is available at https://warthog.readthedocs.org/en/latest/
+The latest documentation is available at https://warthog.readthedocs.io/en/latest/
 
 Source
 ------
@@ -72,4 +72,4 @@ Python packages are available at https://pypi.python.org/pypi/warthog
 Changes
 -------
 
-The change log is available at https://warthog.readthedocs.org/en/latest/changes.html
+The change log is available at https://warthog.readthedocs.io/en/latest/changes.html
