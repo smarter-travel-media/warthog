@@ -52,7 +52,7 @@ Using the client is easy!
     client.enable_server('app1.example.com')
 
 
-See `the docs <https://warthog.readthedocs.org/>`_ for more information.
+See `the docs <https://warthog.readthedocs.io/>`_ for more information.
 
 Documentation
 -------------
