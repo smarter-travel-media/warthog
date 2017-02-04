@@ -17,7 +17,7 @@ Node Level vs Group Level
 
 When interacting with a server in a load balancer, there are typically two ways the server
 can be manipulated -- at the node level and at the group level. Interacting with a server
-at the node level means that it will disabled for all groups that the server belongs to.
+at the node level means that it will be disabled for all groups that the server belongs to.
 Interacting with a server at the group level means that the server may be active for one
 group and disabled for others.
 
