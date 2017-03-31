@@ -124,6 +124,7 @@ def get_client(config):
         settings.scheme_host,
         settings.username,
         settings.password,
+        ssl_version=settings.ssl_version,
         verify=settings.verify))
 
 
