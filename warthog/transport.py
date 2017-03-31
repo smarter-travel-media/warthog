@@ -29,9 +29,9 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 # Default to using the SSL/TLS version that the A10 requires instead of
 # the default that the requests/urllib3 library picks. Or, maybe the A10
-# just doesn't allow the client to negotiate. Either way, we use TLSv1.
+# just doesn't allow the client to negotiate. Either way, we use TLSv1.2.
 # pylint: disable=no-member
-DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1
+DEFAULT_SSL_VERSION = ssl.PROTOCOL_TLSv1_2
 
 # Default to verifying SSL/TLS certs because "safe by default" is a good idea.
 DEFAULT_CERT_VERIFY = True
