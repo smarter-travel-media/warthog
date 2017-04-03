@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+1.999.0 - ????-??-??
+--------------------
+* Add new :mod:`warthog.core3` module for support of A10 V3 APIs in parallel with the existing
+  core module as a transition to the new API.
+* Default to use of TLS version 1.2 when not otherwise specified.
+* **NOTE** This version is only meant to be used internally at SmarterTravel as a transition
+  step between two load balancers. As such, it is not available on PyPI.
+
 1.1.0 - 2016-01-21
 ------------------
 * Disable ``InsecurePlatformWarning`` from urllib3 by default for the CLI client since this makes

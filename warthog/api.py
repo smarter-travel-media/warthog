@@ -42,6 +42,7 @@ from .exceptions import (
     WarthogNodeEnableError,
     WarthogNodeStatusError,
     WarthogNoSuchNodeError,
+    WarthogPermissionError,
     WarthogConfigError,
     WarthogMalformedConfigFileError,
     WarthogNoConfigFileError)
@@ -77,6 +78,7 @@ __all__ = [
     'WarthogNodeEnableError',
     'WarthogNodeStatusError',
     'WarthogNoSuchNodeError',
+    'WarthogPermissionError',
     'WarthogConfigError',
     'WarthogMalformedConfigFileError',
     'WarthogNoConfigFileError'
