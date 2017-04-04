@@ -15,15 +15,14 @@ Load and parse configuration for a client from an INI-style file.
 """
 
 import collections
-import threading
-import ssl
 import sys
-
+import threading
 import codecs
 import os.path
+
 import warthog.exceptions
+import warthog.ssl
 from .packages import six
-# pylint: disable=import-error
 from .packages.six.moves import configparser
 
 # List of locations (from most preferred to least preferred) that will
@@ -38,11 +37,9 @@ DEFAULT_CONFIG_LOCATIONS = [
     os.path.join(os.getcwd(), 'warthog.ini')
 ]
 
-
 # By default, we assume that the configuration file is in UTF-8 unless
 # the caller indicates it is in some other encoding.
 DEFAULT_CONFIG_ENCODING = 'utf-8'
-
 
 # Simple immutable struct to hold configuration information for a WarthogClient
 WarthogConfigSettings = collections.namedtuple(
@@ -163,9 +160,13 @@ class WarthogConfigLoader(object):
 
 
 def parse_ssl_version(version_str, ssl_module=None):
-    """Get the :mod:`ssl` protocol constant that represents the given version
+    """Get the :mod:`warthog.ssl` protocol constant that represents the given version
     string if it exists, raising an error if the version string is malformed or
     does not correspond to a supported protocol.
+
+    Note that the :mod:`warthog.ssl` protocol constants should match the Python
+    :mod:`ssl` module exactly. The difference is that our SSL module has all
+    potential versions while older Python modules did not.
 
     :param unicode version_str: Version string to resolve to a protocol
     :param module ssl_module: SSL module to get the protocol constant from
@@ -180,7 +181,7 @@ def parse_ssl_version(version_str, ssl_module=None):
     if not version_str:
         return None
 
-    ssl_module = ssl_module if ssl_module is not None else ssl
+    ssl_module = ssl_module if ssl_module is not None else warthog.ssl
 
     # Get a list of all the 'PROTOCOL' constants in the SSL module, and
     # strip the 'PROTOCOL_' prefix. This is the set of supported SSL or

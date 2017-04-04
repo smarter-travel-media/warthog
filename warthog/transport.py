@@ -26,17 +26,12 @@ from requests.adapters import (
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from requests.packages.urllib3.poolmanager import PoolManager
 
-# HACK: We need to default to TLSv1.2 to work with the new load balancer
-# but Python 2.6 and Python 3.3 don't have the TLSv1.2 constant. BUT, TLS
-# version 1.2 will work with the version of requests we use on Python 2.6
-# so we hack in the constant here for the sake of a default.
-# pylint: disable=invalid-name
-_PROTOCOL_TLSv1_2 = 5
+import warthog.ssl
 
 # Default to using the SSL/TLS version that the A10 requires instead of
 # the default that the requests/urllib3 library picks. Or, maybe the A10
 # just doesn't allow the client to negotiate. Either way, we use TLSv1.2.
-DEFAULT_SSL_VERSION = _PROTOCOL_TLSv1_2
+DEFAULT_SSL_VERSION = warthog.ssl.PROTOCOL_TLSv1_2
 
 # Default to verifying SSL/TLS certs because "safe by default" is a good idea.
 DEFAULT_CERT_VERIFY = True
