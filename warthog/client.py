@@ -14,10 +14,12 @@ warthog.client
 Simple interface for a load balancer with retry logic and intelligent draining of nodes.
 """
 
-import time
 import contextlib
+import functools
+import time
 
 import warthog.core
+import warthog.core3
 import warthog.exceptions
 import warthog.transport
 
@@ -134,7 +136,8 @@ def _get_default_cmd_factory(verify, ssl_version):
     :rtype: WarthogCommandFactory
     """
     return CommandFactory(warthog.transport.get_transport_factory(
-        verify=verify, ssl_version=ssl_version))
+        verify=verify, ssl_version=ssl_version
+    ))
 
 
 @contextlib.contextmanager
@@ -397,3 +400,55 @@ class WarthogClient(object):
                     "Encountered transient error %s - %s, retrying... ", e.api_code, e.api_msg)
                 time.sleep(self._interval)
                 retries += 1
+
+
+# NOTE: This class is only for transitioning to the v3 API
+class CommandFactory3(object):
+    def __init__(self, transport_factory):
+        self._transport_factory = transport_factory
+
+    def get_session_start(self, scheme_host, username, password):
+        return warthog.core3.SessionStartCommand(
+            self._transport_factory(), scheme_host, username, password)
+
+    def get_session_end(self, scheme_host, session_id):
+        return warthog.core3.SessionEndCommand(
+            self._transport_factory(), scheme_host, session_id)
+
+    def get_server_status(self, scheme_host, session_id, server):
+        return warthog.core3.NodeStatusCommand(
+            self._transport_factory(), scheme_host, session_id, server)
+
+    def get_enable_server(self, scheme_host, session_id, server):
+        return warthog.core3.NodeEnableCommand(
+            self._transport_factory(), scheme_host, session_id, server)
+
+    def get_disable_server(self, scheme_host, session_id, server):
+        return warthog.core3.NodeDisableCommand(
+            self._transport_factory(), scheme_host, session_id, server)
+
+    def get_active_connections(self, scheme_host, session_id, server):
+        return warthog.core3.NodeActiveConnectionsCommand(
+            self._transport_factory(), scheme_host, session_id, server)
+
+
+# NOTE: This class is only for transitioning to the v3 API
+class WarthogClientCompound(object):
+    def __init__(self, *clients):
+        self._clients = clients
+
+    def get_status(self, *args, **kwargs):
+        res = [client.get_status(*args, **kwargs) for client in self._clients]
+        return functools.reduce(lambda x, y: x, res)
+
+    def get_connections(self, *args, **kwargs):
+        res = [client.get_connections(*args, **kwargs) for client in self._clients]
+        return functools.reduce(lambda x, y: x, res)
+
+    def disable_server(self, *args, **kwargs):
+        res = [client.disable_server(*args, **kwargs) for client in self._clients]
+        return functools.reduce(lambda x, y: x, res)
+
+    def enable_server(self, *args, **kwargs):
+        res = [client.enable_server(*args, **kwargs) for client in self._clients]
+        return functools.reduce(lambda x, y: x, res)
