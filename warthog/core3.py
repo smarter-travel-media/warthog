@@ -12,6 +12,12 @@ warthog.core3
 ~~~~~~~~~~~~~
 
 Basic building blocks for authentication and interaction with a load balancer.
+
+.. warning::
+
+    This module only exists as a way to transition from v2 of the A10 API to
+    v3. Version 2.0.0 of Warthog will rename this module to ``warthog.core``
+    and remove the old (v2 API) core module.
 """
 
 import logging
