@@ -16,11 +16,13 @@ CLI interface for interacting with a load balancer using the Warthog client.
 import functools
 import os
 import os.path
+
 import click
+import requests
+
 import warthog
 import warthog.api
 from .packages import six
-import requests
 
 
 def error_wrapper(func):

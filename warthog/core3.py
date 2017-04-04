@@ -19,6 +19,7 @@ import logging
 import requests
 
 import warthog.exceptions
+# pylint: disable=import-error,no-name-in-module
 from .packages.six.moves import urllib
 
 STATUS_ENABLED = 'enabled'
@@ -53,12 +54,14 @@ def get_log():
     return logging.getLogger('warthog')
 
 
+# pylint: disable=invalid-name,missing-docstring
 def _extract_auth_error_from_payload(payload):
     err = payload['authorizationschema']['error'].strip()
     code = payload['authorizationschema']['code']
     return err, code
 
 
+# pylint: disable=invalid-name,missing-docstring
 def _extract_other_error_from_payload(payload):
     err = payload['response']['err']['msg'].strip()
     code = payload['response']['err']['code']
@@ -70,7 +73,9 @@ class _AuthErrorHandler(object):
         self._host = host
         self._user = user
 
+    # pylint: disable=no-self-use
     def can_handle(self, response):
+        # pylint: disable=no-member
         return response.status_code == requests.codes.forbidden
 
     def handle(self, response):
@@ -87,7 +92,9 @@ class _SessionErrorHandler(object):
     def __init__(self, token):
         self._token = token
 
+    # pylint: disable=no-self-use
     def can_handle(self, response):
+        # pylint: disable=no-member
         return response.status_code == requests.codes.unauthorized
 
     def handle(self, response):
@@ -104,7 +111,9 @@ class _PermissionErrorHandler(object):
     def __init__(self, server):
         self._server = server
 
+    # pylint: disable=no-self-use
     def can_handle(self, response):
+        # pylint: disable=no-member
         if response.status_code != requests.codes.bad_request:
             return False
 
@@ -126,7 +135,9 @@ class _NoSuchServerErrorHandler(object):
     def __init__(self, server):
         self._server = server
 
+    # pylint: disable=no-self-use
     def can_handle(self, response):
+        # pylint: disable=no-member
         if response.status_code != requests.codes.not_found:
             return False
 
@@ -145,9 +156,11 @@ class _NoSuchServerErrorHandler(object):
 
 
 class _OtherErrorHandler(object):
+    # pylint: disable=no-self-use
     def can_handle(self, response):
         return not response.ok
 
+    # pylint: disable=no-self-use
     def handle(self, response):
         payload = response.json()
         err, code = _extract_other_error_from_payload(payload)
@@ -159,9 +172,11 @@ class _OtherErrorHandler(object):
 
 
 class _SuccessHandler(object):
+    # pylint: disable=no-self-use
     def can_handle(self, _):
         return True
 
+    # pylint: disable=no-self-use
     def handle(self, response):
         return response.json()
 

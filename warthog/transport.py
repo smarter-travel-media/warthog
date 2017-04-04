@@ -14,8 +14,10 @@ warthog.transport
 Methods to configure how to interact with the load balancer API over HTTP or HTTPS.
 """
 
-import requests
 import warnings
+
+import requests
+
 from requests.adapters import (
     HTTPAdapter,
     DEFAULT_POOLBLOCK,
@@ -28,12 +30,12 @@ from requests.packages.urllib3.poolmanager import PoolManager
 # but Python 2.6 and Python 3.3 don't have the TLSv1.2 constant. BUT, TLS
 # version 1.2 will work with the version of requests we use on Python 2.6
 # so we hack in the constant here for the sake of a default.
+# pylint: disable=invalid-name
 _PROTOCOL_TLSv1_2 = 5
 
 # Default to using the SSL/TLS version that the A10 requires instead of
 # the default that the requests/urllib3 library picks. Or, maybe the A10
 # just doesn't allow the client to negotiate. Either way, we use TLSv1.2.
-# pylint: disable=no-member
 DEFAULT_SSL_VERSION = _PROTOCOL_TLSv1_2
 
 # Default to verifying SSL/TLS certs because "safe by default" is a good idea.
