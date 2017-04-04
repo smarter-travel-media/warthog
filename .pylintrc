@@ -39,8 +39,7 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-# Disable "too few public methods"
-disable=R0903
+disable=duplicate-code,too-few-public-methods
 
 
 
@@ -76,9 +75,6 @@ msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 
 [BASIC]
-
-# Required attributes for module, separated by a comma
-required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
 bad-functions=map,filter,apply,input
@@ -209,10 +205,6 @@ ignore-imports=no
 
 
 [CLASSES]
-
-# List of interface methods to ignore, separated by a comma. This is used for
-# instance to not check methods defines in Zope's Interface base class.
-ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp

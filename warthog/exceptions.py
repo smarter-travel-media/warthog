@@ -84,11 +84,15 @@ class WarthogAuthFailureError(WarthogApiError):
 
 
 class WarthogInvalidSessionError(WarthogApiError):
-    """The session ID used while performing some action is unrecognized."""
+    """The session ID or auth token used while performing some action is unrecognized."""
 
 
 class WarthogAuthCloseError(WarthogApiError):
-    """There was some error while trying to end a session."""
+    """There was some error while trying to end a session.
+
+    .. deprecated:: 1.999.0
+        Cases that previously raised this exception will now raise :class:`WarthogApiError`
+    """
 
 
 class WarthogNodeError(WarthogApiError):
@@ -103,13 +107,30 @@ class WarthogNoSuchNodeError(WarthogNodeError):
     """The host being operated on is unrecognized."""
 
 
+class WarthogPermissionError(WarthogNodeError):
+    """The credentials lack required permissions to perform an operation.
+
+    .. versionadded:: 1.999.0
+    """
+
+
 class WarthogNodeStatusError(WarthogNodeError):
     """There was some error while getting the status of a node."""
 
 
 class WarthogNodeEnableError(WarthogNodeError):
-    """There was some error while trying to enable a node."""
+    """There was some error while trying to enable a node.
+
+    .. deprecated:: 1.999.0
+        Cases that previously raised this exception will now raise :class:`WarthogApiError`
+        or :class:`WarthogPermissionError`
+    """
 
 
 class WarthogNodeDisableError(WarthogNodeError):
-    """There was some error while trying to disable a node."""
+    """There was some error while trying to disable a node.
+
+    .. deprecated:: 1.999.0
+        Cases that previously raised this exception will now raise :class:`WarthogApiError`
+        or :class:`WarthogPermissionError`
+    """
