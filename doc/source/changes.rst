@@ -11,7 +11,7 @@ Changelog
 
 * Add new :mod:`warthog.core3` module for support of A10 V3 APIs in parallel with the existing
   core module as a transition to the new API per `#8 <https://github.com/smarter-travel-media/warthog/issues/8>`_.
-* Make sure to pass `ssl_version` to client created in CLI tool per
+* Make sure to pass ``ssl_version`` to client created in CLI tool per
   `#9 <https://github.com/smarter-travel-media/warthog/issues/9>`_.
 * Default to use of TLS version 1.2 when not otherwise specified.
 
