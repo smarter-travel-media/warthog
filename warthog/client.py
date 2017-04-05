@@ -217,7 +217,7 @@ class WarthogClient(object):
             verify certificates.
         :param int|None ssl_version: :mod:`ssl` module constant for specifying which version of
             SSL or TLS to use when connecting to the load balancer over HTTPS, ``None`` to use
-            the library default. The default is to use TLSv1.
+            the library default. The default is to use TLSv1.2.
         :param float wait_interval: How long (in seconds) to wait between each retry of
             various operations (waiting for nodes to transition, waiting for connections
             to close, etc.).
