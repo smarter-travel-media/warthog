@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+1.999.1 - 2017-04-06
+---------------------
+.. note::
+
+    This version is only meant to be used internally at SmarterTravel as a transition
+    step between two load balancers. As such, it is not available on PyPI.
+
+* Add support for new Python SSL constant ``PROTOCOL_TLS`` to allow negotiation of SSL
+  versions between the client and server.
+
 1.999.0 - 2017-04-05
 --------------------
 .. note::

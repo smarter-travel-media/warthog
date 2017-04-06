@@ -22,7 +22,7 @@ SSL related constants used by Warthog
 
 PROTOCOL_SSLv3 = 1
 
-PROTOCOL_SSLv23 = 2
+PROTOCOL_TLS = PROTOCOL_SSLv23 = 2
 
 PROTOCOL_TLSv1 = 3
 
