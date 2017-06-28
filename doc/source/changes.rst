@@ -1,9 +1,19 @@
 Changelog
 =========
 
+1.999.2 - 2017-06-28
+--------------------
+.. note::
+
+    This version is only meant to be used internally at SmarterTravel as a transition
+    step between two load balancers. As such, it is not available on PyPI.
+
+* Rename ``warthog.core3`` to ``warthog.core``
+* Remove deprecated exceptions in ``warthog.exceptions``: ``WarthogAuthCloseError``,
+  ``WarthogNodeDisableError``, ``WarthogNodeEnableError``.
 
 1.999.1 - 2017-04-06
----------------------
+--------------------
 .. note::
 
     This version is only meant to be used internally at SmarterTravel as a transition

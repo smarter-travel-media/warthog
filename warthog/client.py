@@ -15,11 +15,9 @@ Simple interface for a load balancer with retry logic and intelligent draining o
 """
 
 import contextlib
-import functools
 import time
 
 import warthog.core
-import warthog.core3
 import warthog.exceptions
 import warthog.transport
 
@@ -306,12 +304,10 @@ class WarthogClient(object):
             problems disabling the given server.
         """
         with self._session_context() as session:
-            disable = self._commands.get_disable_server(
-                self._scheme_host, session, server)
+            disable = self._commands.get_disable_server(self._scheme_host, session, server)
             self._try_repeatedly(disable.send, max_retries)
 
-            active = self._commands.get_active_connections(
-                self._scheme_host, session, server)
+            active = self._commands.get_active_connections(self._scheme_host, session, server)
             self._wait_for_connections(active.send, max_retries)
 
             status = self._commands.get_server_status(
@@ -358,12 +354,10 @@ class WarthogClient(object):
             problems enabling the given server.
         """
         with self._session_context() as session:
-            enable = self._commands.get_enable_server(
-                self._scheme_host, session, server)
+            enable = self._commands.get_enable_server(self._scheme_host, session, server)
             self._try_repeatedly(enable.send, max_retries)
 
-            status = self._commands.get_server_status(
-                self._scheme_host, session, server)
+            status = self._commands.get_server_status(self._scheme_host, session, server)
             self._wait_for_enable(status.send, max_retries)
 
             return warthog.core.STATUS_ENABLED == status.send()
@@ -402,53 +396,5 @@ class WarthogClient(object):
                 retries += 1
 
 
-# NOTE: This class is only for transitioning to the v3 API
-class CommandFactory3(object):
-    def __init__(self, transport_factory):
-        self._transport_factory = transport_factory
-
-    def get_session_start(self, scheme_host, username, password):
-        return warthog.core3.SessionStartCommand(
-            self._transport_factory(), scheme_host, username, password)
-
-    def get_session_end(self, scheme_host, session_id):
-        return warthog.core3.SessionEndCommand(
-            self._transport_factory(), scheme_host, session_id)
-
-    def get_server_status(self, scheme_host, session_id, server):
-        return warthog.core3.NodeStatusCommand(
-            self._transport_factory(), scheme_host, session_id, server)
-
-    def get_enable_server(self, scheme_host, session_id, server):
-        return warthog.core3.NodeEnableCommand(
-            self._transport_factory(), scheme_host, session_id, server)
-
-    def get_disable_server(self, scheme_host, session_id, server):
-        return warthog.core3.NodeDisableCommand(
-            self._transport_factory(), scheme_host, session_id, server)
-
-    def get_active_connections(self, scheme_host, session_id, server):
-        return warthog.core3.NodeActiveConnectionsCommand(
-            self._transport_factory(), scheme_host, session_id, server)
-
-
-# NOTE: This class is only for transitioning to the v3 API
-class WarthogClientCompound(object):
-    def __init__(self, *clients):
-        self._clients = clients
-
-    def get_status(self, *args, **kwargs):
-        res = [client.get_status(*args, **kwargs) for client in self._clients]
-        return functools.reduce(lambda x, y: x, res)
-
-    def get_connections(self, *args, **kwargs):
-        res = [client.get_connections(*args, **kwargs) for client in self._clients]
-        return functools.reduce(lambda x, y: x, res)
-
-    def disable_server(self, *args, **kwargs):
-        res = [client.disable_server(*args, **kwargs) for client in self._clients]
-        return functools.reduce(lambda x, y: x, res)
-
-    def enable_server(self, *args, **kwargs):
-        res = [client.enable_server(*args, **kwargs) for client in self._clients]
-        return functools.reduce(lambda x, y: x, res)
+# NOTE: This alias is only for transitioning to the v3 API
+CommandFactory3 = CommandFactory
