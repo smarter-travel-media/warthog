@@ -16,10 +16,11 @@ Basic building blocks for authentication and interaction with a load balancer.
 
 import logging
 
+import requests
+
 import warthog.exceptions
 # pylint: disable=import-error,no-name-in-module
 from .packages.six.moves import urllib
-
 
 STATUS_ENABLED = 'enabled'
 
@@ -27,25 +28,21 @@ STATUS_DISABLED = 'disabled'
 
 STATUS_DOWN = 'down'
 
-ERROR_CODE_GRACEFUL_SHUTDOWN = 67174416
+ERROR_CODE_NO_SUCH_SERVER = 1023460352
 
-ERROR_CODE_INVALID_SESSION = 1009
+ERROR_CODE_BAD_PERMISSION = 419545856
 
-ERROR_CODE_NO_SUCH_SERVER = 67174402
+TRANSIENT_ERRORS = frozenset([])
 
-TRANSIENT_ERRORS = frozenset([
-    ERROR_CODE_GRACEFUL_SHUTDOWN
-])
+_PATH_AUTH = '/axapi/v3/auth'
 
-_API_VERSION = 'v2'
+_PATH_LOGOFF = '/axapi/v3/logoff'
 
-_ACTION_AUTHENTICATE = 'authenticate'
+_PATH_ENABLE = _PATH_DISABLE = '/axapi/v3/slb/server/{server}'
 
-_ACTION_ENABLE = _ACTION_DISABLE = 'slb.server.update'
+_PATH_STATUS = '/axapi/v3/slb/server/{server}/oper'
 
-_ACTION_STATUS = _ACTION_STATISTICS = 'slb.server.fetchStatistics'
-
-_ACTION_CLOSE_SESSION = 'session.close'
+_PATH_CONNS = '/axapi/v3/slb/server/{server}/stats'
 
 
 def get_log():
@@ -57,35 +54,169 @@ def get_log():
     return logging.getLogger('warthog')
 
 
-class _ErrorHandlerMixin(object):
+# pylint: disable=invalid-name,missing-docstring
+def _extract_auth_error_from_payload(payload):
+    err = payload['authorizationschema']['error'].strip()
+    code = payload['authorizationschema']['code']
+    return err, code
+
+
+# pylint: disable=invalid-name,missing-docstring
+def _extract_other_error_from_payload(payload):
+    err = payload['response']['err']['msg'].strip()
+    code = payload['response']['err']['code']
+    return err, code
+
+
+class _AuthErrorHandler(object):
+    def __init__(self, host, user):
+        self._host = host
+        self._user = user
+
+    # pylint: disable=no-self-use
+    def can_handle(self, response):
+        # pylint: disable=no-member
+        return response.status_code == requests.codes.forbidden
+
+    def handle(self, response):
+        payload = response.json()
+        err, code = _extract_auth_error_from_payload(payload)
+
+        raise warthog.exceptions.WarthogAuthFailureError(
+            'Authentication failure using user "{0}" with {1}'.format(self._user, self._host),
+            api_msg=err, api_code=code
+        )
+
+
+class _SessionErrorHandler(object):
+    def __init__(self, token):
+        self._token = token
+
+    # pylint: disable=no-self-use
+    def can_handle(self, response):
+        # pylint: disable=no-member
+        return response.status_code == requests.codes.unauthorized
+
+    def handle(self, response):
+        payload = response.json()
+        err, code = _extract_auth_error_from_payload(payload)
+
+        raise warthog.exceptions.WarthogInvalidSessionError(
+            'Invalid session or token "{0}"'.format(self._token),
+            api_msg=err, api_code=code
+        )
+
+
+class _PermissionErrorHandler(object):
+    def __init__(self, server):
+        self._server = server
+
+    # pylint: disable=no-self-use
+    def can_handle(self, response):
+        # pylint: disable=no-member
+        if response.status_code != requests.codes.bad_request:
+            return False
+
+        payload = response.json()
+        _, code = _extract_other_error_from_payload(payload)
+        return code == ERROR_CODE_BAD_PERMISSION
+
+    def handle(self, response):
+        payload = response.json()
+        err, code = _extract_other_error_from_payload(payload)
+
+        raise warthog.exceptions.WarthogPermissionError(
+            'Insufficient permissions to complete operation on {0}'.format(self._server),
+            api_msg=err, api_code=code, server=self._server
+        )
+
+
+class _NoSuchServerErrorHandler(object):
+    def __init__(self, server):
+        self._server = server
+
+    # pylint: disable=no-self-use
+    def can_handle(self, response):
+        # pylint: disable=no-member
+        if response.status_code != requests.codes.not_found:
+            return False
+
+        payload = response.json()
+        _, code = _extract_other_error_from_payload(payload)
+        return code == ERROR_CODE_NO_SUCH_SERVER
+
+    def handle(self, response):
+        payload = response.json()
+        err, code = _extract_other_error_from_payload(payload)
+
+        raise warthog.exceptions.WarthogNoSuchNodeError(
+            'No such node {0}'.format(self._server),
+            api_msg=err, api_code=code, server=self._server
+        )
+
+
+class _OtherErrorHandler(object):
+    # pylint: disable=no-self-use
+    def can_handle(self, response):
+        return not response.ok
+
+    # pylint: disable=no-self-use
+    def handle(self, response):
+        payload = response.json()
+        err, code = _extract_other_error_from_payload(payload)
+
+        raise warthog.exceptions.WarthogApiError(
+            'Unexpected API error, HTTP code {0}'.format(response.status_code),
+            api_msg=err, api_code=code
+        )
+
+
+class _SuccessHandler(object):
+    # pylint: disable=no-self-use
+    def can_handle(self, _):
+        return True
+
+    # pylint: disable=no-self-use
+    def handle(self, response):
+        return response.json()
+
+
+class _ResponseHandlerMixin(object):
     """Mixin class for translating error responses to WarthogApiError instances."""
 
-    def _extract_error(self, default_cls, message, response):
-        """Return a WarthogApiError instance with the given error message appropriate
-        to the given API response, falling back to an instance of the default class.
-
-        If the default class is a node-specific error, the name of the current node
-        will be provided with the ``server`` keyword argument.
-
-        The ``default_cls`` must be a subclass of ``WarthogApiError``.
-        """
+    def _extract_payload(self, response):
         server = getattr(self, '_server', None)
-        msg, code = _extract_error_message(response)
+        host = getattr(self, '_scheme_host', None)
+        user = getattr(self, '_username', None)
+        auth = getattr(self, '_auth_token', None)
 
-        if code == ERROR_CODE_INVALID_SESSION:
-            return warthog.exceptions.WarthogInvalidSessionError(
-                message, api_msg=msg, api_code=code)
-        if code == ERROR_CODE_NO_SUCH_SERVER:
-            return warthog.exceptions.WarthogNoSuchNodeError(
-                message, api_msg=msg, api_code=code, server=server)
-        # If this is a node specific error type include the value of the '_server'
-        # attribute of the class that this is being invoked from as a keyword arg.
-        if issubclass(default_cls, warthog.exceptions.WarthogNodeError):
-            return default_cls(message, api_msg=msg, api_code=code, server=server)
-        return default_cls(message, api_msg=msg, api_code=code)
+        handlers = [
+            _AuthErrorHandler(host, user),
+            _SessionErrorHandler(auth),
+            _NoSuchServerErrorHandler(server),
+            _PermissionErrorHandler(server),
+            _OtherErrorHandler(),
+            _SuccessHandler()
+        ]
+
+        for handler in handlers:
+            if handler.can_handle(response):
+                return handler.handle(response)
+
+        raise RuntimeError(
+            "At least one configured handler should be able to handle the "
+            "response (code {code}) but none did. This most likely indicates "
+            "a bug in the Warthog library. Response {response}".format(
+                code=response.status_code, response=response.text
+            )
+        )
 
 
-class SessionStartCommand(_ErrorHandlerMixin):
+def _get_endpoint_url(scheme_host, path):
+    return urllib.parse.urljoin(scheme_host, path)
+
+
+class SessionStartCommand(_ResponseHandlerMixin):
     """Command to authenticate with the load balancer and start a new session
     to be used by subsequent commands.
 
@@ -121,23 +252,20 @@ class SessionStartCommand(_ErrorHandlerMixin):
             error code that provides more detail about the failure. Common reasons
             for this error include using invalid username or password.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_AUTHENTICATE)
-        params['username'] = self._username
-        params['password'] = self._password
+        url = _get_endpoint_url(self._scheme_host, _PATH_AUTH)
+        params = {
+            'credentials': {
+                'username': self._username,
+                'password': self._password
+            }
+        }
 
         self._logger.debug('Making session start POST request to %s', url)
-        response = self._transport.post(url, params=params)
+        response = self._transport.post(url, json=params)
         self._logger.debug(response.text)
-        json = response.json()
 
-        if 'session_id' not in json:
-            raise self._extract_error(
-                warthog.exceptions.WarthogAuthFailureError,
-                'Authentication failure with {0}'.format(self._scheme_host),
-                json['response'])
-
-        return json['session_id']
+        payload = self._extract_payload(response)
+        return payload['authresponse']['signature']
 
 
 class _AuthenticatedCommand(object):
@@ -150,7 +278,7 @@ class _AuthenticatedCommand(object):
     """
     _logger = get_log()
 
-    def __init__(self, transport, scheme_host, session_id):
+    def __init__(self, transport, scheme_host, auth_token):
         """Set the requests transport layer, scheme and host of the load balancer,
         and existing session ID to use for authentication.
 
@@ -158,12 +286,15 @@ class _AuthenticatedCommand(object):
             use for making HTTP or HTTPS requests to the load balancer API.
         :param basestring scheme_host: Scheme and hostname of the load balancer to use for
             making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
-        :param basestring session_id: Session ID from a previous authentication request
+        :param basestring auth_token: Auth token from a previous authentication request
             made to the load balancer.
         """
         self._transport = transport
         self._scheme_host = scheme_host
-        self._session_id = session_id
+        self._auth_token = auth_token
+
+    def _auth_header(self):
+        return {'Authorization': 'A10 {auth}'.format(auth=self._auth_token)}
 
     def send(self):
         """Abstract method for making a request to the load balancer API and parsing
@@ -172,7 +303,7 @@ class _AuthenticatedCommand(object):
         raise NotImplementedError()
 
 
-class SessionEndCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
+class SessionEndCommand(_AuthenticatedCommand, _ResponseHandlerMixin):
     """Command for ending a previously authenticated session with the load balancer.
 
     This class is thread safe.
@@ -183,37 +314,27 @@ class SessionEndCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
 
         :return: True if the current session could be closed
         :rtype: bool
-        :raises warthog.exceptions.WarthogInvalidSessionError: If the load balancer
-            did not recognize the session this command is being run as part of.
-        :raises warthog.exceptions.WarthogAuthCloseError: If the session could not be
+        :raises warthog.exceptions.WarthogApiError: If the session could not be
             closed. This is usually the result of the session ID being invalid or the
             session already being closed before this command is run.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_CLOSE_SESSION, self._session_id)
+        url = _get_endpoint_url(self._scheme_host, _PATH_LOGOFF)
 
         self._logger.debug('Making session close POST request to %s', url)
-        response = self._transport.post(url, params=params)
+        response = self._transport.post(url, headers=self._auth_header())
         self._logger.debug(response.text)
-        json = response.json()
+        payload = self._extract_payload(response)
 
-        if json['response']['status'] == 'fail':
-            raise self._extract_error(
-                warthog.exceptions.WarthogAuthCloseError,
-                'Could not close session {0} on {1}'.format(
-                    self._session_id, self._scheme_host),
-                json['response'])
-
-        return json['response']['status'] == 'OK'
+        return payload['response']['status'] == 'OK'
 
 
-class NodeEnableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
+class NodeEnableCommand(_AuthenticatedCommand, _ResponseHandlerMixin):
     """Command to mark a particular server as enabled.
 
     This class is thread safe.
     """
 
-    def __init__(self, transport, scheme_host, session_id, server):
+    def __init__(self, transport, scheme_host, auth_token, server):
         """Set the requests transport layer, scheme and host of the load balancer,
         existing session ID to use for authentication, and hostname of the server
         to enable.
@@ -222,11 +343,11 @@ class NodeEnableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
             use for making HTTP or HTTPS requests to the load balancer API.
         :param basestring scheme_host: Scheme and hostname of the load balancer to use for
             making API requests. E.g. 'https://lb.example.com' or 'http://10.1.2.3'.
-        :param basestring session_id: Session ID from a previous authentication request
+        :param basestring auth_token: Session ID from a previous authentication request
             made to the load balancer.
         :param basestring server: Host name of the server to enable.
         """
-        super(NodeEnableCommand, self).__init__(transport, scheme_host, session_id)
+        super(NodeEnableCommand, self).__init__(transport, scheme_host, auth_token)
         self._server = server
 
     def send(self):
@@ -239,30 +360,24 @@ class NodeEnableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
             did not recognize the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
-        :raises warthog.exceptions.WarthogNodeEnableError: If the server could
-            not be enabled for any other reason.
+        :raises warthog.exceptions.WarthogPermissionError: If the user doesn't
+            have the required permissions to enable the server.
+        :raises warthog.exceptions.WarthogApiError: If the server could not be
+            enabled for any other reason.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
-        params['name'] = self._server
-        params['server'] = self._server
-        params['status'] = 1
+        url = _get_endpoint_url(self._scheme_host, _PATH_ENABLE)
+        url = url.format(server=self._server)
+        params = {'server': {'action': 'enable'}}
 
         self._logger.debug('Making node enable POST request for %s', self._server)
-        response = self._transport.post(url, params=params)
+        response = self._transport.post(url, headers=self._auth_header(), json=params)
         self._logger.debug(response.text)
-        json = response.json()
+        payload = self._extract_payload(response)
 
-        if json['response']['status'] == 'fail':
-            raise self._extract_error(
-                warthog.exceptions.WarthogNodeEnableError,
-                'Could not enable node {0}'.format(self._server),
-                json['response'])
-
-        return json['response']['status'] == 'OK'
+        return payload['server']['action'] == 'enable'
 
 
-class NodeDisableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
+class NodeDisableCommand(_AuthenticatedCommand, _ResponseHandlerMixin):
     """Command to mark a particular server as disabled.
 
     This class is thread safe.
@@ -294,30 +409,24 @@ class NodeDisableCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
             did not recognize the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
-        :raises warthog.exceptions.WarthogNodeDisableError: If the server could
-            not be disabled for any other reason.
+        :raises warthog.exceptions.WarthogPermissionError: If the user doesn't
+            have the required permissions to disable the server.
+        :raises warthog.exceptions.WarthogApiError: If the server could not be
+            disabled for any other reason.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_ENABLE, self._session_id)
-        params['name'] = self._server
-        params['server'] = self._server
-        params['status'] = 0
+        url = _get_endpoint_url(self._scheme_host, _PATH_DISABLE)
+        url = url.format(server=self._server)
+        params = {'server': {'action': 'disable'}}
 
         self._logger.debug('Making node disable POST request for %s', self._server)
-        response = self._transport.post(url, params=params)
+        response = self._transport.post(url, headers=self._auth_header(), json=params)
         self._logger.debug(response.text)
-        json = response.json()
+        payload = self._extract_payload(response)
 
-        if json['response']['status'] == 'fail':
-            raise self._extract_error(
-                warthog.exceptions.WarthogNodeDisableError,
-                'Could not disable node {0}'.format(self._server),
-                json['response'])
-
-        return json['response']['status'] == 'OK'
+        return payload['server']['action'] == 'disable'
 
 
-class NodeStatusCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
+class NodeStatusCommand(_AuthenticatedCommand, _ResponseHandlerMixin):
     """Command to get the current status ('enabled', 'disabled', 'down') of a particular
     server.
 
@@ -351,36 +460,31 @@ class NodeStatusCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
         :raises warthog.exceptions.WarthogNodeStatusError: If the status of the server
-            could not be determined for any other reason.
+            was not a recognized status.
+        :raises warthog.exceptions.WarthogApiError: If there are any other problems
+            getting the status of the server.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_STATUS, self._session_id)
-        params['name'] = self._server
+        url = _get_endpoint_url(self._scheme_host, _PATH_STATUS)
+        url = url.format(server=self._server)
 
         self._logger.debug('Making node status GET request for %s', self._server)
-        response = self._transport.get(url, params=params)
+        response = self._transport.get(url, headers=self._auth_header())
         self._logger.debug(response.text)
-        json = response.json()
+        payload = self._extract_payload(response)
 
-        if 'server_stat' not in json:
-            raise self._extract_error(
-                warthog.exceptions.WarthogNodeStatusError,
-                'Could not get status of {0}'.format(self._server),
-                json['response'])
-
-        status = json['server_stat']['status']
-        if status == 0:
+        status = payload['server']['oper']['state']
+        if status == 'Disabled':
             return STATUS_DISABLED
-        if status == 1:
+        if status == 'Up':
             return STATUS_ENABLED
-        if status == 2:
+        if status == 'Down':
             return STATUS_DOWN
 
         raise warthog.exceptions.WarthogNodeStatusError(
             'Unknown status of {0}: status={1}'.format(self._server, status))
 
 
-class NodeActiveConnectionsCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
+class NodeActiveConnectionsCommand(_AuthenticatedCommand, _ResponseHandlerMixin):
     """Command to get the number of active connections to a particular server.
 
     This class is thread safe.
@@ -411,55 +515,15 @@ class NodeActiveConnectionsCommand(_AuthenticatedCommand, _ErrorHandlerMixin):
             did not recognize the session this command is being run as part of.
         :raises warthog.exceptions.WarthogNoSuchNodeError: If the server was not
             recognized by the load balancer.
-        :raises warthog.exceptions.WarthogNodeStatusError: If the number of active
+        :raises warthog.exceptions.WarthogApiError: If the number of active
             connections to the server could not be determined for any other reason.
         """
-        url = _get_base_url(self._scheme_host)
-        params = _get_base_query_params(_ACTION_STATISTICS, self._session_id)
-        params['name'] = self._server
+        url = _get_endpoint_url(self._scheme_host, _PATH_CONNS)
+        url = url.format(server=self._server)
 
         self._logger.debug('Making active connection count GET request for %s', self._server)
-        response = self._transport.get(url, params=params)
+        response = self._transport.get(url, headers=self._auth_header())
         self._logger.debug(response.text)
-        json = response.json()
+        payload = self._extract_payload(response)
 
-        if 'server_stat' not in json:
-            raise self._extract_error(
-                warthog.exceptions.WarthogNodeStatusError,
-                'Could not get status of {0}'.format(self._server),
-                json['response'])
-
-        return json['server_stat']['cur_conns']
-
-
-def _extract_error_message(response):
-    """Get a two element tuple of the form ``msg, code`` where ``msg`` is an
-    error message returned by the API and ``code`` is a numeric code associated
-    with that particular error.
-    """
-    if response['status'] == 'fail':
-        return response['err']['msg'].strip(), response['err']['code']
-    raise ValueError(
-        "Unexpected response format from request: {0}".format(response))
-
-
-def _get_base_url(scheme_host):
-    """Get a URL to API of the load balancer, not including any query string
-    parameters.
-    """
-    return urllib.parse.urljoin(
-        scheme_host, 'services/rest/{version}/'.format(version=_API_VERSION))
-
-
-def _get_base_query_params(action, session_id=None):
-    """Get a dictionary of query string parameters to pass to the load balancer
-    API based on the given action and optional session ID.
-    """
-    params = {
-        'format': 'json',
-        'method': action
-    }
-
-    if session_id is not None:
-        params['session_id'] = session_id
-    return params
+        return payload['server']['stats']['curr-conn']

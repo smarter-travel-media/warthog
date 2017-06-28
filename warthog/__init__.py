@@ -14,4 +14,4 @@ warthog
 Simple client for A10 load balancers.
 """
 
-__version__ = '1.999.1'
+__version__ = '1.999.2'

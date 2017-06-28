@@ -87,14 +87,6 @@ class WarthogInvalidSessionError(WarthogApiError):
     """The session ID or auth token used while performing some action is unrecognized."""
 
 
-class WarthogAuthCloseError(WarthogApiError):
-    """There was some error while trying to end a session.
-
-    .. deprecated:: 1.999.0
-        Cases that previously raised this exception will now raise :class:`WarthogApiError`
-    """
-
-
 class WarthogNodeError(WarthogApiError):
     """Base for errors specific to operating on some individual node."""
 
@@ -116,21 +108,3 @@ class WarthogPermissionError(WarthogNodeError):
 
 class WarthogNodeStatusError(WarthogNodeError):
     """There was some error while getting the status of a node."""
-
-
-class WarthogNodeEnableError(WarthogNodeError):
-    """There was some error while trying to enable a node.
-
-    .. deprecated:: 1.999.0
-        Cases that previously raised this exception will now raise :class:`WarthogApiError`
-        or :class:`WarthogPermissionError`
-    """
-
-
-class WarthogNodeDisableError(WarthogNodeError):
-    """There was some error while trying to disable a node.
-
-    .. deprecated:: 1.999.0
-        Cases that previously raised this exception will now raise :class:`WarthogApiError`
-        or :class:`WarthogPermissionError`
-    """

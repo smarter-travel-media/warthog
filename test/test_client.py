@@ -8,7 +8,6 @@ import warthog.client
 import warthog.core
 import warthog.exceptions
 
-
 SCHEME_HOST = 'https://lb.example.com'
 
 
@@ -166,42 +165,7 @@ class TestWarthogClient(object):
         assert not disabled, 'Server ended up disabled'
         assert end_cmd.send.called, 'Session end .send() did not get called'
 
-    def test_enable_server_in_graceful_shutdown(self, commands, start_cmd, end_cmd,
-                                                status_cmd, enable_cmd):
-        graceful_error = warthog.exceptions.WarthogNodeEnableError(
-            '', api_code=warthog.core.ERROR_CODE_GRACEFUL_SHUTDOWN, api_msg='')
-
-        start_cmd.send.return_value = '1234'
-        enable_cmd.send.side_effect = [graceful_error, graceful_error, True]
-        status_cmd.send.return_value = 'enabled'
-
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
-
-        enabled = client.enable_server('app1.example.com')
-
-        assert enabled, 'Server did not end up enabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
-
-    def test_enable_server_in_graceful_shutdown_switching_to_down(self, commands, start_cmd, end_cmd,
-                                                                  status_cmd, enable_cmd):
-        graceful_error = warthog.exceptions.WarthogNodeEnableError(
-            '', api_code=warthog.core.ERROR_CODE_GRACEFUL_SHUTDOWN, api_msg='')
-
-        start_cmd.send.return_value = '1234'
-        enable_cmd.send.side_effect = [graceful_error, graceful_error, True]
-        status_cmd.send.side_effect = ['down', 'down', 'enabled', 'enabled']
-
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
-
-        enabled = client.enable_server('app1.example.com')
-
-        assert enabled, 'Server did not end up enabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
-
-    def test_enable_server_no_graceful_shutdown_switching_to_down(self, commands, start_cmd, end_cmd,
-                                                                  status_cmd, enable_cmd):
+    def test_enable_server(self, commands, start_cmd, end_cmd, status_cmd, enable_cmd):
         start_cmd.send.return_value = '1234'
         enable_cmd.send.return_value = True
         status_cmd.send.side_effect = ['down', 'down', 'enabled', 'enabled']
@@ -212,20 +176,4 @@ class TestWarthogClient(object):
         enabled = client.enable_server('app1.example.com')
 
         assert enabled, 'Server did not end up enabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
-
-    def test_enable_server_never_comes_out_of_graceful_shutdown(self, commands, start_cmd, end_cmd,
-                                                                enable_cmd):
-        graceful_error = warthog.exceptions.WarthogNodeEnableError(
-            '', api_code=warthog.core.ERROR_CODE_GRACEFUL_SHUTDOWN, api_msg='')
-
-        start_cmd.send.return_value = '1234'
-        enable_cmd.send.side_effect = [graceful_error, graceful_error]
-
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
-
-        with pytest.raises(warthog.exceptions.WarthogNodeEnableError):
-            client.enable_server('app1.example.com', max_retries=1)
-
         assert end_cmd.send.called, 'Session end .send() did not get called'
