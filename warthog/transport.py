@@ -21,8 +21,7 @@ import requests
 from requests.adapters import (
     HTTPAdapter,
     DEFAULT_POOLBLOCK,
-    DEFAULT_POOLSIZE,
-    DEFAULT_RETRIES)
+    DEFAULT_POOLSIZE)
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from requests.packages.urllib3.poolmanager import PoolManager
 
@@ -36,21 +35,24 @@ DEFAULT_SSL_VERSION = warthog.ssl.PROTOCOL_TLSv1_2
 # Default to verifying SSL/TLS certs because "safe by default" is a good idea.
 DEFAULT_CERT_VERIFY = True
 
+# Default number of times to retry on transient network errors like connection
+# timeouts or DNS timeouts.
+DEFAULT_RETRIES = 5
 
-def get_transport_factory(verify=None, ssl_version=None):
+
+def get_transport_factory(verify=None, ssl_version=None, retries=None):
     """Get a new callable that returns :class:`requests.Session` instances that
     have been configured according to the given parameters.
 
     :class:`requests.Session` instances are then used for interacting with the API
     of the load balancer over HTTP or HTTPS.
 
-    It is typically not required for user code to call this function directly unless
-    you have special requirements such as needing to bypass HTTPS certificate validation
-    because you use a self signed certificate.
-
     .. versionchanged:: 0.10.0
         Using the requests/urllib3 default is no longer an option. Passing a ``None`` value
         for ``ssl_version`` will result in using the Warthog default (TLS v1).
+
+    .. versionchanged:: 2.0.0
+        Added the ``retries`` parameter and default it to a number greater than zero.
 
     :param bool|None verify: Should SSL certificates by verified when connecting
         over HTTPS? Default is ``True``. If you have chosen not to verify certificates
@@ -58,6 +60,9 @@ def get_transport_factory(verify=None, ssl_version=None):
     :param int|None ssl_version: Explicit version of SSL to use for HTTPS connections
         to an A10 load balancer. The version is a constant as specified by the
         :mod:`ssl` module. The default is TLSv1.
+    :param int|None retries: The maximum number of times to retry operations on transient
+        network errors. Note this only applies to cases where we haven't yet sent any
+        data to the server (e.g. connection errors, DNS errors, etc.)
     :return: A callable to return new configured session instances for making HTTP(S)
         requests
     :rtype: callable
@@ -67,14 +72,22 @@ def get_transport_factory(verify=None, ssl_version=None):
     # just pass `None` and we'll pick the default here.
     verify = verify if verify is not None else DEFAULT_CERT_VERIFY
     ssl_version = ssl_version if ssl_version is not None else DEFAULT_SSL_VERSION
+    retries = retries if retries is not None else DEFAULT_RETRIES
 
     # pylint: disable=missing-docstring
     def factory():
         transport = requests.Session()
-        transport.mount('https://', VersionedSSLAdapter(ssl_version))
+        transport.mount('https://', VersionedSSLAdapter(ssl_version, max_retries=retries))
 
         if not verify:
             transport.verify = False
+
+        transport.mount('http://', HTTPAdapter(
+            max_retries=retries,
+            pool_connections=DEFAULT_POOLSIZE,
+            pool_maxsize=DEFAULT_POOLSIZE,
+            pool_block=DEFAULT_POOLBLOCK
+        ))
 
         return transport
 
@@ -100,7 +113,8 @@ class VersionedSSLAdapter(HTTPAdapter):
             pool_connections=pool_connections,
             pool_maxsize=pool_maxsize,
             max_retries=max_retries,
-            pool_block=pool_block)
+            pool_block=pool_block
+        )
 
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         # pylint: disable=attribute-defined-outside-init
