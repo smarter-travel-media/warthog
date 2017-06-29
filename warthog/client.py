@@ -224,7 +224,8 @@ class WarthogClient(object):
         self._logger.debug('Creating new session context for %s', self._scheme_host)
         session = None
         try:
-            start_cmd = self._commands.get_session_start(self._scheme_host, self._username, self._password)
+            start_cmd = self._commands.get_session_start(
+                self._scheme_host, self._username, self._password)
             session = start_cmd.send()
 
             yield session

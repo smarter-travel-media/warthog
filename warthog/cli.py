@@ -137,7 +137,7 @@ def disable_platform_warning():
     See https://github.com/smarter-travel-media/warthog/issues/5
     """
     import warnings
-    from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+    from urllib3.exceptions import InsecurePlatformWarning
 
     warnings.filterwarnings("ignore", category=InsecurePlatformWarning)
 

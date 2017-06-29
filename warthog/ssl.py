@@ -19,13 +19,21 @@ SSL related constants used by Warthog
 # example Python 2.6 and Python 3.3 don't include TLSv1.1 or TLSv1.2
 # and we need to support the combination of those Python versions
 # and TLS versions. Kinda hacky but required. Such is life.
+#
+# Disabling the lint checks below since we're matching what the stdlib does.
+#
 
+# pylint: disable=invalid-name
 PROTOCOL_SSLv3 = 1
 
+# pylint: disable=invalid-name
 PROTOCOL_TLS = PROTOCOL_SSLv23 = 2
 
+# pylint: disable=invalid-name
 PROTOCOL_TLSv1 = 3
 
+# pylint: disable=invalid-name
 PROTOCOL_TLSv1_1 = 4
 
+# pylint: disable=invalid-name
 PROTOCOL_TLSv1_2 = 5
