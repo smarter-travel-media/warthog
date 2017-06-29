@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
-import pytest
 import mock
+import pytest
+
 import warthog.client
 import warthog.core
 import warthog.exceptions
@@ -59,15 +58,13 @@ def disable_cmd():
     return mock.Mock(spec=warthog.core.NodeDisableCommand)
 
 
-@pytest.fixture
-def client():
-    return mock.Mock(spec=warthog.client.WarthogClient)
-
-
 def test_session_context_enter_yields_session(commands, start_cmd):
     start_cmd.send.return_value = '1234'
 
-    context = warthog.client.session_context(SCHEME_HOST, 'user', 'password', commands)
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
+
+    context = client._session_context()
     session = context.__enter__()
 
     assert '1234' == session, 'Did not get expected session ID'
@@ -78,7 +75,10 @@ def test_session_context_enter_yields_session(commands, start_cmd):
 def test_session_context_exit_closes_previous_session(commands, start_cmd, end_cmd):
     start_cmd.send.return_value = '1234'
 
-    context = warthog.client.session_context(SCHEME_HOST, 'user', 'password', commands)
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
+
+    context = client._session_context()
     context.__enter__()
     context.__exit__(None, None, None)
 
@@ -88,92 +88,100 @@ def test_session_context_exit_closes_previous_session(commands, start_cmd, end_c
 
 def test_session_context_exception_in_context_propagated(commands, start_cmd):
     start_cmd.send.return_value = '1234'
-    context = warthog.client.session_context(SCHEME_HOST, 'user', 'password', commands)
+
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
+
+    context = client._session_context()
 
     with pytest.raises(RuntimeError):
         with context:
             raise RuntimeError("AHH!")
 
 
-class TestWarthogClient(object):
-    def test_get_status(self, commands, start_cmd, end_cmd, status_cmd):
-        start_cmd.send.return_value = '1234'
-        status_cmd.send.return_value = 'down'
+def test_get_status(commands, start_cmd, end_cmd, status_cmd):
+    start_cmd.send.return_value = '1234'
+    status_cmd.send.return_value = 'down'
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
 
-        status = client.get_status('app1.example.com')
+    status = client.get_status('app1.example.com')
 
-        assert 'down' == status, 'Did not get expected status'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
+    assert 'down' == status, 'Did not get expected status'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
 
-    def test_get_connections(self, commands, start_cmd, end_cmd, conn_cmd):
-        start_cmd.send.return_value = '1234'
-        conn_cmd.send.return_value = 42
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+def test_get_connections(commands, start_cmd, end_cmd, conn_cmd):
+    start_cmd.send.return_value = '1234'
+    conn_cmd.send.return_value = 42
 
-        connections = client.get_connections('app1.example.com')
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
 
-        assert 42 == connections, 'Did not get expected active connections'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
+    connections = client.get_connections('app1.example.com')
 
-    def test_disable_server_no_active_connections(self, commands, start_cmd, end_cmd,
-                                                  status_cmd, conn_cmd, disable_cmd):
-        start_cmd.send.return_value = '1234'
-        disable_cmd.send.return_value = True
-        conn_cmd.send.return_value = 0
-        status_cmd.send.return_value = 'disabled'
+    assert 42 == connections, 'Did not get expected active connections'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
 
-        disabled = client.disable_server('app1.example.com')
+def test_disable_server_no_active_connections(commands, start_cmd, end_cmd,
+                                              status_cmd, conn_cmd, disable_cmd):
+    start_cmd.send.return_value = '1234'
+    disable_cmd.send.return_value = True
+    conn_cmd.send.return_value = 0
+    status_cmd.send.return_value = 'disabled'
 
-        assert disabled, 'Server did not end up disabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
 
-    def test_disable_server_with_active_connections(self, commands, start_cmd, end_cmd,
-                                                    status_cmd, conn_cmd, disable_cmd):
-        start_cmd.send.return_value = '1234'
-        disable_cmd.send.return_value = True
-        conn_cmd.send.return_value = [42, 3, 0]
-        status_cmd.send.return_value = 'disabled'
+    disabled = client.disable_server('app1.example.com')
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+    assert disabled, 'Server did not end up disabled'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
 
-        disabled = client.disable_server('app1.example.com')
 
-        assert disabled, 'Server did not end up disabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
-
-    def test_disable_server_never_gets_disabled(self, commands, start_cmd, end_cmd,
+def test_disable_server_with_active_connections(commands, start_cmd, end_cmd,
                                                 status_cmd, conn_cmd, disable_cmd):
-        start_cmd.send.return_value = '1234'
-        disable_cmd.send.return_value = True
-        conn_cmd.send.return_value = 42
-        status_cmd.send.return_value = 'enabled'
+    start_cmd.send.return_value = '1234'
+    disable_cmd.send.return_value = True
+    conn_cmd.send.return_value = [42, 3, 0]
+    status_cmd.send.return_value = 'disabled'
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
 
-        disabled = client.disable_server('app1.example.com')
+    disabled = client.disable_server('app1.example.com', wait_interval=0.1)
 
-        assert not disabled, 'Server ended up disabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
+    assert disabled, 'Server did not end up disabled'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
 
-    def test_enable_server(self, commands, start_cmd, end_cmd, status_cmd, enable_cmd):
-        start_cmd.send.return_value = '1234'
-        enable_cmd.send.return_value = True
-        status_cmd.send.side_effect = ['down', 'down', 'enabled', 'enabled']
 
-        client = warthog.client.WarthogClient(
-            SCHEME_HOST, 'user', 'password', wait_interval=0.1, commands=commands)
+def test_disable_server_never_gets_disabled(commands, start_cmd, end_cmd,
+                                            status_cmd, conn_cmd, disable_cmd):
+    start_cmd.send.return_value = '1234'
+    disable_cmd.send.return_value = True
+    conn_cmd.send.return_value = 42
+    status_cmd.send.return_value = 'enabled'
 
-        enabled = client.enable_server('app1.example.com')
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
 
-        assert enabled, 'Server did not end up enabled'
-        assert end_cmd.send.called, 'Session end .send() did not get called'
+    disabled = client.disable_server('app1.example.com', wait_interval=0.1)
+
+    assert not disabled, 'Server ended up disabled'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
+
+
+def test_enable_server(commands, start_cmd, end_cmd, status_cmd, enable_cmd):
+    start_cmd.send.return_value = '1234'
+    enable_cmd.send.return_value = True
+    status_cmd.send.side_effect = ['down', 'down', 'enabled', 'enabled']
+
+    client = warthog.client.WarthogClient(
+        SCHEME_HOST, 'user', 'password', commands=commands)
+
+    enabled = client.enable_server('app1.example.com', wait_interval=0.1)
+
+    assert enabled, 'Server did not end up enabled'
+    assert end_cmd.send.called, 'Session end .send() did not get called'
