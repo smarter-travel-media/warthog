@@ -8,7 +8,7 @@ Prerequisites
 
 These instructions assume that you have the following things available.
 
-* Python 2.6 - 2.7 or Python 3.3 - Python 3.4
+* Python 2.6 - 2.7 or Python 3.3 - Python 3.6
 * The virtualenv_ tool
 * The pip_ tool
 * Git_

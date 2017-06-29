@@ -16,7 +16,7 @@ Features
 * Waiting for servers to finish all requests when being disabled
 * Graceful handling of transient errors with optional retry logic
 * Support for interacting with the load balancer API using SSL
-* Works with Python 2.6, 2.7, 3.3, and 3.4+
+* Works with Python 2.6, 2.7, 3.3, 3.4, 3.5, 3.6+
 * Thread safety
 
 Installation
