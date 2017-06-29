@@ -23,6 +23,8 @@ import os.path
 import warthog.exceptions
 import warthog.ssl
 from .packages import six
+
+# pylint: disable=import-error
 from .packages.six.moves import configparser
 
 # List of locations (from most preferred to least preferred) that will

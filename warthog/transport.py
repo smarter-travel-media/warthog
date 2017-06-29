@@ -22,8 +22,8 @@ from requests.adapters import (
     HTTPAdapter,
     DEFAULT_POOLBLOCK,
     DEFAULT_POOLSIZE)
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from requests.packages.urllib3.poolmanager import PoolManager
+from urllib3.exceptions import InsecureRequestWarning
+from urllib3.poolmanager import PoolManager
 
 import warthog.ssl
 

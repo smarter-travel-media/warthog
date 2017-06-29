@@ -1,6 +1,16 @@
 Changelog
 =========
 
+2.0.0 - 2017-06-29
+------------------
+* **Breaking change** - The Warthog library now only supports v3 of the A10 load balancer REST API. If you need
+  to interact with a load balancer that uses v2 of the A10 REST API you are advised to use Warthog 1.1.0.
+* **Breaking change** - Removed the ``wait_interval`` parameter from :class:`warthog.client.WarthogClient`. This
+  setting can now be specified directly for calls to ``enable_node`` and ``disable_node`` methods.
+* **Breaking change** - Removed ``WarthogAuthCloseError``, ``WarthogNodeDisableError``, ``WarthogNodeEnableError``.
+  Places where these exceptions were previously raised will now raise :class:`warthog.exceptions.WarthogApiError`.
+* Network operations are now retried on transient errors per `#17 <https://github.com/smarter-travel-media/warthog/issues/17>`_.
+
 1.999.2 - 2017-06-28
 --------------------
 .. note::
