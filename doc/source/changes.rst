@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.0.1 - 2017-07-20
+------------------
+* Disable SNI related SSL warnings from urllib3 when running the CLI tool on Python 2.6. This can still be enabled
+  with the ``--enable-platform-warnings`` switch if desired by the caller.
+
 2.0.0 - 2017-06-29
 ------------------
 * **Breaking change** - The Warthog library now only supports v3 of the A10 load balancer REST API. If you need
