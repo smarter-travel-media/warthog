@@ -34,7 +34,7 @@ def lint():
 @task
 def coverage():
     with quiet():
-        local('coverage run --source warthog ./env/bin/py.test test')
+        local('coverage run --source warthog ./.env/bin/py.test test')
 
     with hide('running'):
         local("coverage report  --omit 'warthog/packages*' --show-missing")
