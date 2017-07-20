@@ -131,15 +131,16 @@ def get_client(config):
 
 
 def disable_platform_warning():
-    """Disable the InsecurePlatformWarning emitted by urllib3. This is the
-    default behavior unless the caller specifically asks for these warnings.
+    """Disable the SSL warnings emitted by urllib3. This is the default
+    behavior unless the caller specifically asks for these warnings.
 
     See https://github.com/smarter-travel-media/warthog/issues/5
     """
     import warnings
-    from urllib3.exceptions import InsecurePlatformWarning
+    from urllib3.exceptions import InsecurePlatformWarning, SNIMissingWarning
 
     warnings.filterwarnings("ignore", category=InsecurePlatformWarning)
+    warnings.filterwarnings("ignore", category=SNIMissingWarning)
 
 
 @click.command()
