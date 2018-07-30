@@ -49,7 +49,7 @@ def get_transport_factory(verify=None, ssl_version=None, retries=None):
 
     .. versionchanged:: 0.10.0
         Using the requests/urllib3 default is no longer an option. Passing a ``None`` value
-        for ``ssl_version`` will result in using the Warthog default (TLS v1).
+        for ``ssl_version`` will result in using the Warthog default (TLS v1.2).
 
     .. versionchanged:: 2.0.0
         Added the ``retries`` parameter and default it to a number greater than zero.
@@ -59,7 +59,7 @@ def get_transport_factory(verify=None, ssl_version=None, retries=None):
         warnings about this emitted by the requests library will be suppressed.
     :param int|None ssl_version: Explicit version of SSL to use for HTTPS connections
         to an A10 load balancer. The version is a constant as specified by the
-        :mod:`ssl` module. The default is TLSv1.
+        :mod:`ssl` module. The default is TLSv1.2.
     :param int|None retries: The maximum number of times to retry operations on transient
         network errors. Note this only applies to cases where we haven't yet sent any
         data to the server (e.g. connection errors, DNS errors, etc.)
