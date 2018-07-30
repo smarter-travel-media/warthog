@@ -148,7 +148,7 @@ Commands
         username = username
         password = password
         verify = yes
-        ssl_version = TLSv1
+        ssl_version = TLSv1_2
 
 
 .. cmdoption:: config-path
@@ -198,7 +198,7 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
     username = username
     password = password
     verify = yes
-    ssl_version = TLSv1
+    ssl_version = TLSv1_2
 
 .. tabularcolumns:: |l|l|
 
@@ -225,8 +225,9 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
 ``ssl_version``           SSL / TLS version to use when connecting to the load balancer over
                           HTTPS. This version must be supported by your Python install (i.e.
                           there must be a PROTOCOL constant corresponding to it in :mod:`ssl`).
-                          Potential supported values are ``SSLv23``, ``TLSv1``, ``TLSv1_1``, or
-                          ``TLSv1_2``. This setting is optional.
+                          Potential supported values are ``SSLv23``, ``TLS``, ``TLSv1``,
+                          ``TLSv1_1``, or ``TLSv1_2``. This setting is optional. The default
+                          is to use ``TLSv1_2``.
 ========================= =======================================================================
 
 .. versionchanged:: 0.10.0
@@ -235,7 +236,7 @@ The Warthog CLI client uses an INI-style_ configuration file. The format is show
 
 .. versionchanged:: 0.10.0
     The ``ssl_version`` parameter is now supported and optional. If not specified the Warthog
-    library default will be used (TLSv1).
+    library default will be used (TLSv1_2).
 
 Location
 ~~~~~~~~

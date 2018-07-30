@@ -192,7 +192,7 @@ def default_config():
         'username = username',
         'password = password',
         'verify = yes',
-        'ssl_version = TLSv1'
+        'ssl_version = TLSv1_2'
     ]))
 
 
