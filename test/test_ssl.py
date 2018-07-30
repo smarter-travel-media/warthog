@@ -10,7 +10,14 @@ import warthog.ssl
 
 
 def test_ssl3_matches():
-    assert ssl.PROTOCOL_SSLv3 == warthog.ssl.PROTOCOL_SSLv3
+    try:
+        # It's possible that we're running under a new version of Python
+        # and this constant doesn't exist anymore
+        module_const = ssl.PROTOCOL_SSLv3
+    except AttributeError:
+        return
+
+    assert module_const == warthog.ssl.PROTOCOL_SSLv3
 
 
 def test_ssl23_matches():
