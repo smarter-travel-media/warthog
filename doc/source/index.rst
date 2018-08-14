@@ -34,8 +34,8 @@ To install Warthog, simply run:
 
 Dependencies
 ------------
-* `requests <https://github.com/kennethreitz/requests>`_ by Kenneth Reitz, version 2.6 or higher
-* `click <https://github.com/mitsuhiko/click>`_ by Armin Ronacher, version 3.3 or higher
+* `requests <https://github.com/kennethreitz/requests>`_ by Kenneth Reitz, version 2.18 or higher
+* `click <https://github.com/mitsuhiko/click>`_ by Armin Ronacher, version 6.7 or higher
 
 Usage
 -----
