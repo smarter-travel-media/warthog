@@ -41,7 +41,7 @@ SSL
 ---
 
 The Warthog library supports interacting with a load balancer over HTTPS. By default
-when using SSL, certificates will be verified_, and TSLv1 will be explicitly used. If
+when using SSL, certificates will be verified_, and TSLv1.2 will be explicitly used. If
 you wish to override either of these, you can do so when using the
 :class:`warthog.client.WarthogClient` or in your configuration file.
 
